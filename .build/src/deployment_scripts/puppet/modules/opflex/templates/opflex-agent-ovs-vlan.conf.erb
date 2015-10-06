@@ -1,0 +1,47 @@
+{
+    "log": {
+      "level": "<%= @opflex_log_level %>"
+    },
+
+    "opflex": {
+    "domain": "comp/prov-OpenStack/ctrlr-[<%= @opflex_apic_domain_name %>]-<%= @opflex_apic_domain_name %>/sw-InsiemeLSOid",
+       "name": "<%= @hostname %>",
+       "peers": [
+          {"hostname": "<%= @opflex_peer_ip %>", "port": "<%= @opflex_peer_port %>"}
+        ],
+       "ssl": {
+          "mode": "<%= @opflex_ssl_mode %>",
+          "ca-store": "/etc/ssl/certs/"
+       }
+    },
+
+    "endpoint-sources": {
+        "filesystem": ["<%= @opflex_endpoint_dir %>"]
+    },
+
+    "renderers": {
+         "stitched-mode": {
+             "ovs-bridge-name": "<%= @opflex_ovs_bridge_name %>",
+
+             "encap": {
+                 "vlan" : {
+                     "encap-iface": "<%= @opflex_encap_iface %>"
+                 }
+             },
+             "forwarding": {
+	         "virtual-router": {
+		     "enabled": <%= @opflex_virtual_router %>,
+                     "mac": "<%= @opflex_virtual_router_mac %>",
+                     "ipv6": {
+		         "router-advertisement": "<%= @opflex_router_advertisement %>"
+		     }
+		 },
+		 "virtual-dhcp": {
+   		     "enabled": "<%= @opflex_virtual_dhcp_enabled %>",
+		     "mac": "<%= @opflex_virtual_dhcp_mac %>"
+		 }
+             },
+             "flowid-cache-dir": "<%= @opflex_cache_dir %>"
+        }
+    }
+}

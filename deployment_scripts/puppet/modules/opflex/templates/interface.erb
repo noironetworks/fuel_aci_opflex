@@ -1,0 +1,4 @@
+auto <%= @opflex_uplink_iface%>.<%= @opflex_uplink_vlan %>
+iface <%= @opflex_uplink_iface%>.<%= @opflex_uplink_vlan %> inet dhcp
+vlan-raw-device <%= @opflex_uplink_iface%>
+post-up /sbin/route -nv add -net 224.0.0.0/4 dev <%= @opflex_uplink_iface%>.<%= @opflex_uplink_vlan %>

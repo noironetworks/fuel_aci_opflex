@@ -1,0 +1,8 @@
+option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
+option ms-classless-static-routes code 249 = array of unsigned integer 8;
+option wpad code 252 = string;
+interface "<%= @opflex_uplink_iface%>.<%= @opflex_uplink_vlan %>" {
+           send host-name <%= scope.lookupvar("fqdn") %>;
+           send dhcp-client-identifier 01:<%= scope.lookupvar("macaddress_#{ @opflex_uplink_iface }") %>;
+}
+
