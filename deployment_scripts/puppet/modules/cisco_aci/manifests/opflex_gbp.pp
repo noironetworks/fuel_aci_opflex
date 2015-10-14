@@ -9,7 +9,7 @@ class cisco_aci::opflex_gbp (
     $apic_password                      = 'password',
     $static_config                      = '',
     $additional_config                  = '',
-    $service_plugins                    = 'cisco_apic_l3,neutron.services.metering.metering_plugin.MeteringPlugin',
+    $service_plugins                    = 'apic_gbp_l3,group_policy,neutron.services.metering.metering_plugin.MeteringPlugin',
     $mechanism_drivers                  = 'apic_gbp',
     $admin_username                     = 'admin',
     $admin_password                     = 'admin',
@@ -141,6 +141,7 @@ class cisco_aci::opflex_gbp (
                 apic_external_network              => $apic_external_network,
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
+                gbp                                => true,
             }
 
             service {'heat-api':

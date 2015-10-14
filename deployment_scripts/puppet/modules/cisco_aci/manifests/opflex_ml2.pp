@@ -134,6 +134,7 @@ class cisco_aci::opflex_ml2 (
                 apic_external_network              => $apic_external_network,
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
+                gbp                                => false,
             }
         }
         default: {

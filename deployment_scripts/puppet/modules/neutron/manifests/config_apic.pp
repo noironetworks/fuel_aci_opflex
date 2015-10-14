@@ -19,6 +19,7 @@ class neutron::config_apic (
     $apic_external_network              = '',
     $pre_existing_external_network_on   = '',
     $external_epg                       = '',
+    $gbp                                = true,
 ){
 
     $additional_config_hash = hash(split($additional_config, '[\n=]'))
@@ -67,6 +68,13 @@ class neutron::config_apic (
         "apic_external_network:${apic_ext_net}/preexisting":   value => $pre_existing_external_network_on;
         "apic_external_network:${apic_ext_net}/external_epg":  value => $external_epg;
         "opflex/networks":                                     value => '*';
+    }
+
+    if ($gbp == true) {
+       neutron_plugin_ml2_cisco {
+           'group_policy/policy_drivers':                       value => 'implicit_policy,apic';
+           'group_policy_implicit_policy/default_ip_pool':      value => '192.168.0.0/16';
+       }
     }
 
     additional_configuration { $additional_config_options: }
