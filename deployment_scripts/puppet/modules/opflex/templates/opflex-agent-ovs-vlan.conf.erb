@@ -19,6 +19,10 @@
         "filesystem": ["<%= @opflex_endpoint_dir %>"]
     },
 
+    "service-sources": {
+        "filesystem": ["/var/lib/opflex-agent-ovs/services"]
+    },
+
     "renderers": {
          "stitched-mode": {
              "ovs-bridge-name": "<%= @opflex_ovs_bridge_name %>",

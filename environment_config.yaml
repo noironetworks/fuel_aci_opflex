@@ -15,6 +15,9 @@ attributes:
       - data: "ML2"
         label: "ML2"
         description: "ML2 Driver"
+      - data: "GBP"
+        label: "Group Based Policy"
+        description: "Group Based Policy Driver"
   apic_hosts:
     value: '10.0.0.100'
     label: 'APIC Host'

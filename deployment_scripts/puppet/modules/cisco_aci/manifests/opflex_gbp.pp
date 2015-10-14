@@ -1,5 +1,5 @@
-#Class cisco_aci::opflex_ml2
-class cisco_aci::opflex_ml2 (
+#Class cisco_aci::opflex_gbp
+class cisco_aci::opflex_gbp (
     $ha_prefix                          = '',
     $role                               = 'compute',
     $use_lldp                           = true,
@@ -10,7 +10,7 @@ class cisco_aci::opflex_ml2 (
     $static_config                      = '',
     $additional_config                  = '',
     $service_plugins                    = 'cisco_apic_l3,neutron.services.metering.metering_plugin.MeteringPlugin',
-    $mechanism_drivers                  = 'cisco_apic_ml2',
+    $mechanism_drivers                  = 'apic_gbp',
     $admin_username                     = 'admin',
     $admin_password                     = 'admin',
     $admin_tenant                       = 'admin',
@@ -75,6 +75,12 @@ class cisco_aci::opflex_ml2 (
                 }
 
             }
+
+            $gbp_pkgs = ["group-based-policy", "group-based-policy-automation", "group-based-policy-ui", "python-group-based-policy-client"]
+            package {$gbp_pkgs:
+               ensure => installed,
+            }
+
         }
         'compute': {
             class {'neutron::services::ovs_agent':
@@ -86,16 +92,10 @@ class cisco_aci::opflex_ml2 (
         }
     }
 
-    Neutron_config <| |> ~> Service <| title == 'neutron-server' |>
-    Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-server' |>
-    Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-server' |>
-    Neutron_dhcp_agent_config <| |> ~> Service <| title == 'neutron-dhcp-agent' |>
-
     #KVR: comment out next 3 lines, dont need neutron-ovs-agent
     #Neutron_config <| |> ~> Service <| title == 'neutron-ovs-agent' |>
     #Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-ovs-agent' |>
     #Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-ovs-agent' |>
-    File <| title == 'neutron_initd' |> ~> Service <| title == 'neutron-server' |>
 
     if $use_lldp {
         include 'lldp'
@@ -105,6 +105,13 @@ class cisco_aci::opflex_ml2 (
 
     case $role {
         /controller/: {
+            Neutron_config <| |> ~> Service <| title == 'neutron-server' |>
+            Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-server' |>
+            Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-server' |>
+            Neutron_dhcp_agent_config <| |> ~> Service <| title == 'neutron-dhcp-agent' |>
+            File <| title == 'neutron_initd' |> ~> Service <| title == 'neutron-server' |>
+            Heat_config <| |> ~> Service['heat-api', 'heat-engine', 'heat-api-cloudwatch', 'heat-api-cfn']
+
             class {'neutron::config':
                 service_plugins   => $service_plugins,
                 mechanism_drivers => $mechanism_drivers,
@@ -134,6 +141,30 @@ class cisco_aci::opflex_ml2 (
                 apic_external_network              => $apic_external_network,
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
+            }
+
+            service {'heat-api':
+              ensure => 'running',
+              enable => 'true',
+            }
+        
+            service {'heat-api-cloudwatch':
+              ensure => 'running',
+              enable => 'true',
+            }
+        
+            service {'heat-api-cfn':
+              ensure => 'running',
+              enable => 'true',
+            }
+        
+            service {'heat-engine':
+              ensure => 'running',
+              enable => 'true',
+            }
+
+            heat_config {
+               'DEFAULT/plugin_dirs': value => "/usr/lib/python2.7/site-packages/gbpautomation/heat";
             }
         }
         default: {
