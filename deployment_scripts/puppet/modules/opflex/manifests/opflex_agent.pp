@@ -61,14 +61,12 @@ class opflex::opflex_agent (
         name    => $::opflex::params::package_agent_ovs,
     }
 
-    if ($role =~ /controller/ ){
-        service {'neutron-opflex-agent':
-            ensure     => stopped,
-            name       => $::opflex::params::package_neutron_opflex,
-            enable     => false,
-            hasstatus  => true,
-            hasrestart => false,
-        }
+    service {'neutron-opflex-agent':
+        ensure     => stopped,
+        name       => $::opflex::params::package_neutron_opflex,
+        enable     => false,
+        hasstatus  => true,
+        hasrestart => false,
     }
 
     if ($opflex_encap_type == "vxlan") {
