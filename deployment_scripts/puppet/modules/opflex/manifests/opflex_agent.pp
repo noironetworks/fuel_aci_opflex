@@ -60,7 +60,17 @@ class opflex::opflex_agent (
         ensure  => 'present',
         name    => $::opflex::params::package_agent_ovs,
     }
-    
+
+    if ($role =~ /controller/ ){
+        service {'neutron-opflex-agent':
+            ensure     => stopped,
+            name       => $::opflex::params::package_neutron_opflex,
+            enable     => false,
+            hasstatus  => true,
+            hasrestart => false,
+        }
+    }
+
     if ($opflex_encap_type == "vxlan") {
         $opflex_encap_iface = 'br-int_vxlan0'
         file {'agent-conf':
