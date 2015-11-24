@@ -1,6 +1,6 @@
 #Class neutron::services::ovs_agent
 class neutron::services::ovs_agent (
-    $enabled        = true,
+    $enabled        = false,
     $manage_service = true,
 ){
     include neutron::params
@@ -21,9 +21,9 @@ class neutron::services::ovs_agent (
         hasrestart => true,
     }
 
-    Neutron_config<||>              ~> Service['neutron-ovs-agent']
-    Neutron_plugin_ml2<||>          ~> Service['neutron-ovs-agent']
-    Neutron_plugin_ml2_cisco<||>    ~> Service['neutron-ovs-agent']
-    File_line<||>                   ~> Service['neutron-ovs-agent']
+    #Neutron_config<||>              ~> Service['neutron-ovs-agent']
+    #Neutron_plugin_ml2<||>          ~> Service['neutron-ovs-agent']
+    #Neutron_plugin_ml2_cisco<||>    ~> Service['neutron-ovs-agent']
+    #File_line<||>                   ~> Service['neutron-ovs-agent']
 
 }

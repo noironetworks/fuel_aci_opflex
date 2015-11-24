@@ -34,9 +34,13 @@ class cisco_aci::opflex_ml2 (
     $opflex_peer_ip                     = '',
     $opflex_remote_ip                   = '',
     $br_to_patch                        = '',
+    $snat_gateway_mask                  = '',
+    $optimized_dhcp                     = true,
+    $optimized_metadata                 = true,
 ){
     include 'apic::params'
     include 'apic::api'
+    require neutron::neutron_service_management
 
     if $use_lldp {
         class {'apic::svc_agent':
@@ -78,6 +82,10 @@ class cisco_aci::opflex_ml2 (
         }
         'compute': {
             class {'neutron::services::ovs_agent':
+                enabled        => false,
+                manage_service => true,
+            }
+            class {'neutron::services::server':
                 enabled        => false,
                 manage_service => true,
             }
@@ -135,6 +143,9 @@ class cisco_aci::opflex_ml2 (
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
                 gbp                                => false,
+                snat_gateway_mask                  => $snat_gateway_mask,
+                optimized_dhcp                     => $optimized_dhcp,
+                optimized_metadata                 => $optimized_metadata,
             }
         }
         default: {
@@ -142,6 +153,8 @@ class cisco_aci::opflex_ml2 (
     }
 
     class {'opflex::opflex_agent':
+        role                               => $role,
+        ha_prefix                          => $ha_prefix,
         opflex_ovs_bridge_name             => 'br-int',
         opflex_uplink_iface                => $opflex_interface,
         opflex_uplink_vlan                 => $apic_infra_vlan,

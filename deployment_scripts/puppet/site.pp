@@ -8,6 +8,15 @@ $neutron_settings   = hiera('quantum_settings',{})
 $db_connection      = "mysql://neutron:${neutron_settings['database']['passwd']}@${management_vip}/neutron?&read_timeout=60"
 $network_scheme     = hiera('network_scheme', {})
 
+$debug                         = hiera('debug', true)
+$auth_region                   = 'RegionOne'
+$admin_tenant_name             = 'services'
+$neutron_admin_username        = 'neutron' 
+$neutron_config                = hiera('quantum_settings')
+$neutron_user_password         = $neutron_config['keystone']['admin_password']
+$service_endpoint              = hiera('management_vip')
+$neutron_metadata_proxy_secret = $neutron_config['metadata']['metadata_proxy_shared_secret']
+
 prepare_network_config($network_scheme)
 $intf   = get_network_role_property('neutron/private', 'phys_dev')
 $opflex_interface   = $intf[0]
@@ -38,6 +47,9 @@ if ($aci_opflex_hash['driver_type'] == 'ML2') {
 
 case $install_type {
     'ML2', 'GBP': {
+       class {"neutron::neutron_service_management":
+            role                                     => $role,
+       } 
        class {"cisco_aci::${class_name}":
             ha_prefix                                => $ha_prefix,
             role                                     => $role,
@@ -71,6 +83,21 @@ case $install_type {
             opflex_peer_ip                           => $aci_opflex_hash['apic_infra_subnet_gateway'],
             opflex_remote_ip                         => $aci_opflex_hash['apic_infra_anycast_address'],
             br_to_patch                              => $br_to_patch,
+            snat_gateway_mask                        => $aci_opflex_hash['snat_gateway_mask'],
+            optimized_dhcp                           => $aci_opflex_hash['optimized_dhcp'],
+            optimized_metadata                       => $aci_opflex_hash['optimized_metadata'],
+       }
+       if $role == "compute" {
+           class {'neutron::compute_neutron_metadata':
+                debug          => $debug,
+                auth_region    => $auth_region,
+                auth_url       => "http://${service_endpoint}:35357/v2.0",
+                auth_user      => $neutron_admin_username,
+                auth_tenant    => $admin_tenant_name,
+                auth_password  => $neutron_user_password, 
+                shared_secret  => $neutron_metadata_proxy_secret,
+                metadata_ip    => $service_endpoint,
+           }
        }
     }
     'US1': {

@@ -7,6 +7,9 @@ class lldp (
         $service_name = 'lldpd',
     ){
 
+    $aci_opflex_hash    = hiera('aci_opflex',{})
+    $opflex_encap_type = $aci_opflex_hash['opflex_encap_type']
+
     include lldp::params
     case $ensure {
         'present': {
@@ -39,9 +42,17 @@ class lldp (
         ensure => $pkg_ensure,
     }
 
+    if $opflex_encap_type == "vxlan" {
+       $content = inline_template($::lldp::params::config_file_data_vxlan)
+    }
+
+    if $opflex_encap_type == "vlan" {
+       $content = inline_template($::lldp::params::config_file_data_vlan)
+    }
+
     file {$::lldp::params::config_file_path:
         ensure  => $file_ensure,
-        content => inline_template($::lldp::params::config_file_data),
+        content => $content,
         require => Package[$package_name],
         notify  => Service[$service_name],
     }

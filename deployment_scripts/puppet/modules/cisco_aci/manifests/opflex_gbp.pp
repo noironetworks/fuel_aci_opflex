@@ -30,10 +30,13 @@ class cisco_aci::opflex_gbp (
     $external_epg                       = '',
     $opflex_interface                   = '',
     $apic_infra_vlan                    = '',
-    $opflex_encap_type                  = 'vlan',
+    $opflex_encap_type                  = 'vxlan',
     $opflex_peer_ip                     = '',
     $opflex_remote_ip                   = '',
     $br_to_patch                        = '',
+    $snat_gateway_mask                  = '',
+    $optimized_dhcp                     = true,
+    $optimized_metadata                 = true,
 ){
     include 'apic::params'
     include 'apic::api'
@@ -87,15 +90,26 @@ class cisco_aci::opflex_gbp (
                 enabled        => false,
                 manage_service => true,
             }
+            class {'neutron::services::server':
+                enabled        => false,
+                manage_service => true,
+            }
         }
         default: {
         }
     }
 
+    Neutron_config <| |> ~> Service <| title == 'neutron-server' |>
+    Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-server' |>
+    Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-server' |>
+    Neutron_dhcp_agent_config <| |> ~> Service <| title == 'neutron-dhcp-agent' |>
+
     #KVR: comment out next 3 lines, dont need neutron-ovs-agent
     #Neutron_config <| |> ~> Service <| title == 'neutron-ovs-agent' |>
     #Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-ovs-agent' |>
     #Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-ovs-agent' |>
+    File <| title == 'neutron_initd' |> ~> Service <| title == 'neutron-server' |>
+    Heat_config <| |> ~> Service['heat-api', 'heat-engine', 'heat-api-cloudwatch', 'heat-api-cfn']
 
     if $use_lldp {
         include 'lldp'
@@ -105,12 +119,6 @@ class cisco_aci::opflex_gbp (
 
     case $role {
         /controller/: {
-            Neutron_config <| |> ~> Service <| title == 'neutron-server' |>
-            Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-server' |>
-            Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-server' |>
-            Neutron_dhcp_agent_config <| |> ~> Service <| title == 'neutron-dhcp-agent' |>
-            File <| title == 'neutron_initd' |> ~> Service <| title == 'neutron-server' |>
-            Heat_config <| |> ~> Service['heat-api', 'heat-engine', 'heat-api-cloudwatch', 'heat-api-cfn']
 
             class {'neutron::config':
                 service_plugins   => $service_plugins,
@@ -142,6 +150,9 @@ class cisco_aci::opflex_gbp (
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
                 gbp                                => true,
+                snat_gateway_mask                  => $snat_gateway_mask,
+                optimized_dhcp                     => $optimized_dhcp,
+                optimized_metadata                 => $optimized_metadata,
             }
 
             service {'heat-api':
@@ -173,6 +184,8 @@ class cisco_aci::opflex_gbp (
     }
 
     class {'opflex::opflex_agent':
+        role                               => $role,
+        ha_prefix                          => $ha_prefix,
         opflex_ovs_bridge_name             => 'br-int',
         opflex_uplink_iface                => $opflex_interface,
         opflex_uplink_vlan                 => $apic_infra_vlan,

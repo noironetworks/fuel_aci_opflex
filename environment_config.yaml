@@ -120,33 +120,39 @@ attributes:
     restrictions:
         - condition: "settings:aci_opflex.use_pre_existing_l3context.value == false"
           action: hide
-  apic_external_network:
+  apic_system_id:
     type: "text"
     weight: 56
-    value: "my_ext_net"
-    label: "APIC external network:"
-    description: "External network name, which will be used by APIC"
-    restrictions:
-        - condition: "settings:aci_opflex.ext_net_enable.value == true"
-          action: hide
+    value: "openstack1"
+    label: "OpenStack system ID:"
+    description: "OpenStack ID to be used by APIC"
   pre_existing_external_network_on:
     type: "checkbox"
     weight: 57
     value: true
     label: "Use pre-existing external network"
     description: "Use pre-existing external neutron network configured on APIC side"
-  apic_system_id:
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == true"
+          action: hide
+  apic_external_network:
     type: "text"
     weight: 58
-    value: "openstack1"
-    label: "OpenStack system ID:"
-    description: "OpenStack ID to be used by APIC"
+    value: "my_ext_net"
+    label: "APIC external network:"
+    description: "External network name, which will be used by APIC"
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == true"
+          action: hide
   external_epg:
     type: "text"
     weight: 59
     value: "ext_epg"
     label: "External EPG name:"
     description: "APIC external EPG name"
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == true"
+          action: hide
   ext_net_enable:
     type: "checkbox"
     weight: 70
@@ -198,9 +204,28 @@ attributes:
     restrictions:
         - condition: "settings:aci_opflex.ext_net_enable.value == false"
           action: hide
+  snat_gateway_mask:
+    type: "text"
+    weight: 76
+    value: '1.1.1.1/24'
+    label: "SNAT Gateway/Mask:"
+    description: "SNAT gateway and number of mask bits"
+    regex:
+      source: '^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[1-9]|[1-9][1-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2]\d|3[0-2])$'
+      error: "Invalid Gateway / Mask bits"
+  optimized_dhcp:
+    type: "checkbox"
+    weight: 77
+    value: true
+    label: "Enable Optimized DHCP"
+  optimized_metadata:
+    type: "checkbox"
+    weight: 78
+    value: false
+    label: "Enable Optimized Metadata"
   additional_config:
     type: "textarea"
-    weight: 76
+    weight: 79
     value: ""
     label: "Additional config"
     description: "Example:\nml2_cisco_apic/apic_vpc_pairs=201:202,203:204"
