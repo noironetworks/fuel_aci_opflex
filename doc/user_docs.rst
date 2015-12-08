@@ -85,25 +85,25 @@ Cisco ACI Opflex Configuration
 ----------------------------------------
 #. Create a new OpenStack environment with Fuel UI wizard:
 
-.. image:: http://packet.gorzow.org/img/1.png
+.. image:: pics/1.png
 
 #. Please select KVM or QEMU hypervisor type for your environment
 
-.. image:: http://packet.gorzow.org/img/2.png
+.. image:: pics/2.png
 
 #. Please select Neutron network topology
 
-.. image:: http://packet.gorzow.org/img/3.png
+.. image:: pics/3.png
 
 #. Add nodes and assign them the following roles:
 At least 1 Controller
 At least 1 Compute
 
-.. image:: http://packet.gorzow.org/img/4.png
+.. image:: pics/4.png
 
 #. Open Settings tab of the Fuel Web UI and scroll the page down. Select the plugin checkbox:
 
-.. image:: http://packet.gorzow.org/img/5.png
+.. image:: pics/5.png
 
 #. Fill the plugin configuration fields with correct values:
 
