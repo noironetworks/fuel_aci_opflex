@@ -98,6 +98,23 @@ class neutron::services::ha_agents (
       onlyif  => '/etc/init.d/openvswitch-switch status',
     }
 
+    service {'neutron-opflex-agent':
+        ensure     => 'running',
+        name       => 'neutron-opflex-agent',
+        enable     => true,
+        hasstatus  => true,
+        hasrestart => false,
+    }
+
+#    service { 'neutron-ovs-agent':
+#        ensure     => false,
+#        name       => $::neutron::params::service_ovs_agent,
+#        enable     => false,
+#        hasstatus  => true,
+#        hasrestart => true,
+#        tag        => 'neutron_agents'
+#    }
+
     Neutron_config<||>              ~> Service<| tag == 'ha_agents' |>
     Neutron_plugin_ml2<||>          ~> Service<| tag == 'ha_agents' |>
     Neutron_plugin_ml2_cisco<||>    ~> Service<| tag == 'ha_agents' |>

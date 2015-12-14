@@ -3,7 +3,7 @@ class apic::svc_agent (
     $package_ensure = 'present',
     $enabled        = true,
     $manage_service = true,
-    $role           = '',
+    $roles           = [''],
 ){
     include apic::params
     include apic::api
@@ -12,7 +12,7 @@ class apic::svc_agent (
     Package['apic_api']             -> Neutron_plugin_ml2<||>
     Package['apic_api']             -> Neutron_plugin_ml2_cisco<||>
 
-    if ($role =~ /controller/ ){
+    if "controller" in $roles or "primary-controller" in $roles {    
         if $manage_service {
             if $enabled {
                 $service_ensure = 'running'

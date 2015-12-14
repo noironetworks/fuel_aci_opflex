@@ -1,5 +1,5 @@
 class opflex::opflex_agent (
-     $role = 'compute',
+     $roles = ['compute'],
      $ha_prefix = '',
      $opflex_log_level = 'debug2',
      $opflex_peer_ip = '10.0.0.30',

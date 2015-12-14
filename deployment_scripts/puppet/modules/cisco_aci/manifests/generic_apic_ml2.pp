@@ -1,7 +1,7 @@
 #Class cisco_aci::generic_apic_ml2
 class cisco_aci::generic_apic_ml2 (
     $ha_prefix                          = '',
-    $role                               = 'compute',
+    $roles                              = ['compute'],
     $use_lldp                           = true,
     $apic_system_id                     = '',
     $apic_hosts                         = '10.0.0.1',
@@ -34,7 +34,7 @@ class cisco_aci::generic_apic_ml2 (
 
     if $use_lldp {
         class {'apic::svc_agent':
-            role    => $role
+            roles    => $roles
         }
     }
 
@@ -42,38 +42,34 @@ class cisco_aci::generic_apic_ml2 (
         $apic_external_network = $ext_net_name
     }
 
-    case $role {
-        /controller/: {
-            if $use_lldp {
-                include 'apic::svc_agent'
-            }else {
-                package { 'apic_ml2_package':
-                    ensure => 'present',
-                    name   => $::apic::params::package_neutron_ml2_driver_apic,
-                }
+    if "controller" in $roles or "primary-controller" in $roles {
+        if $use_lldp {
+            include 'apic::svc_agent'
+        }else {
+            package { 'apic_ml2_package':
+                ensure => 'present',
+                name   => $::apic::params::package_neutron_ml2_driver_apic,
             }
-            include 'neutron::services::apic_server'
-            include "neutron::services::${ha_prefix}agents"
-            class {'neutron::config_auth':
-                admin_username => $admin_username,
-                admin_password => $admin_password,
-                admin_tenant   => $admin_tenant,
+        }
+        include 'neutron::services::apic_server'
+        include "neutron::services::${ha_prefix}agents"
+        class {'neutron::config_auth':
+            admin_username => $admin_username,
+            admin_password => $admin_password,
+            admin_tenant   => $admin_tenant,
+        }
+        if ($role == 'primary-controller' and $ext_net_enable == true){
+            class {'neutron::network':
+                tenant_name     => $admin_tenant,
+                ext_net_name    => $ext_net_name,
+                ext_net_subnet  => $ext_net_subnet,
+                ext_net_gateway => $ext_net_gateway,
             }
-            if ($role == 'primary-controller' and $ext_net_enable == true){
-                class {'neutron::network':
-                    tenant_name     => $admin_tenant,
-                    ext_net_name    => $ext_net_name,
-                    ext_net_subnet  => $ext_net_subnet,
-                    ext_net_gateway => $ext_net_gateway,
-                }
 
-            }
         }
-        'compute': {
-            include 'neutron::services::ovs_agent'
-        }
-        default: {
-        }
+    }
+    if "compute" in $roles {
+        include 'neutron::services::ovs_agent'
     }
 
     Neutron_config <| |> ~> Service <| title == 'neutron-server' |>
