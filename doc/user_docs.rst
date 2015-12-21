@@ -122,9 +122,8 @@ Cisco ACI Opflex Configuration
       | encap = <encapsulation>
       | cidr_exposed = <cidr_exposed_to_the_external_router>
       | gateway_ip = <ip_of_the_external_gateway>
-
-   An example follows:
-
+      |
+      | An example follows:
       | switch=203
       | port=1/34
       | encap=vlan-100
