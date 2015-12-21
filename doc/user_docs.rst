@@ -117,19 +117,19 @@ Cisco ACI Opflex Configuration
    #. Use pre-existing external network - If selected, the APIC has been preconfigured with the external network used for the OpenStack external network. This option should not be selected if the “Configure external network” option has been set.
    #. Configure external network - If enabled, the APIC ML2 Mechanism Driver configures an the external network in APIC whenever the user creates an external network in OpenStack. This requires the user to provide the parameters for the external network, and should not be selected if the “Use pre-existing external network” option has been selected. These parameters can be provided via key/value pairs in the   “Additional config” field. The format of this configuration is:
 
-   | switch = <switch_id_from_the_apic>
-   | port = <switchport_the_external_router_is_connected_to>
-   | encap = <encapsulation>
-   | cidr_exposed = <cidr_exposed_to_the_external_router>
-   | gateway_ip = <ip_of_the_external_gateway>
+      | switch = <switch_id_from_the_apic>
+      | port = <switchport_the_external_router_is_connected_to>
+      | encap = <encapsulation>
+      | cidr_exposed = <cidr_exposed_to_the_external_router>
+      | gateway_ip = <ip_of_the_external_gateway>
 
    An example follows:
 
-   | switch=203
-   | port=1/34
-   | encap=vlan-100
-   | cidr_exposed=10.10.40.2/16
-   | gateway_ip=10.10.40.1
+      | switch=203
+      | port=1/34
+      | encap=vlan-100
+      | cidr_exposed=10.10.40.2/16
+      | gateway_ip=10.10.40.1
 
 
    #. Additional config - This field is used to pass additional configuration file parameters used by the plugin, via key/value pairs. This only recommended for use of advanced features of the system. 
