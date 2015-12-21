@@ -107,6 +107,10 @@ Cisco ACI Opflex Configuration
 #. Fill the plugin configuration fields with correct values:
 
    #. Select the APIC Driver mode ML2 or GBP
+
+      .. Warning::
+         GBP mode is beta (not tested)
+
    #. SET APIC Host, Username and password (if those data will be incorrect deploy will fail)
    #. Set encapsulation mode, Infra vlan, Gateway and context name.
    #. This field is used to pass additional configuration parameters to the plugin, via key/value pairs.    
