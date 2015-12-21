@@ -87,6 +87,12 @@ class opflex::opflex_agent (
        require => File['agent-conf'],
     }
 
+    file {'ovs_initd':
+        ensure => 'present',
+        path   => '/etc/init/agent-ovs.override',
+        source => 'puppet:///modules/cisco_aci/agent-ovs.override'
+    }
+
     if ($opflex_encap_type == "vxlan") {
         exec {'add_vxlan_port':
            command => "/usr/bin/ovs-vsctl add-port $opflex_ovs_bridge_name $opflex_encap_iface -- set Interface $opflex_encap_iface type=vxlan options:remote_ip=flow options:key=flow options:dst_port=$opflex_remote_port",
