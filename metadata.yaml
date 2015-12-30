@@ -3,11 +3,11 @@ name: aci_opflex
 # Human-readable name for your plugin
 title: ACI Opflex Plugin
 # Plugin version
-version: 0.9.5
+version: 1.0.1
 # Description
 description: Enable to setup Openstack with ACI and Opflex
 # Required fuel version
-fuel_version: ['6.1']
+fuel_version: ['7.0']
 # Specify license of your plugin
 licenses: ['Apache License Version 2.0']
 # Specify author or company name
@@ -21,10 +21,10 @@ groups: ['network']
 # The plugin is compatible with releases in the list
 releases:
   - os: ubuntu
-    version: 2014.2-6.1
+    version: 2015.1.0-7.0
     mode: ['ha', 'multinode']
     deployment_scripts_path: deployment_scripts/
     repository_path: repositories/ubuntu
 
 # Version of plugin package
-package_version: '2.0.0'
+package_version: '3.0.0'
