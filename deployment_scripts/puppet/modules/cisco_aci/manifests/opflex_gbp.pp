@@ -48,7 +48,9 @@ class cisco_aci::opflex_gbp (
     }
 
     if ($ext_net_enable == true) {
-        $apic_external_network = $ext_net_name
+       $external_network = $ext_net_name
+    } else {
+       $external_network = $apic_external_network
     }
 
     case $role {
@@ -146,7 +148,7 @@ class cisco_aci::opflex_gbp (
                 pre_existing_vpc                   => $pre_existing_vpc,
                 pre_existing_l3_context            => $pre_existing_l3_context,
                 shared_context_name                => $shared_context_name,
-                apic_external_network              => $apic_external_network,
+                apic_external_network              => $external_network,
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
                 gbp                                => true,

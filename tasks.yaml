@@ -9,3 +9,4 @@
     puppet_manifest: puppet/site.pp
     puppet_modules: puppet/modules/
     timeout: 3600
+
