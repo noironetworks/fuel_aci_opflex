@@ -78,19 +78,19 @@ class neutron::services::ha_agents (
       command => 'killall neutron-l3-agent',
       path    => '/usr/sbin:/bin:/sbin:/usr/bin',
       onlyif  => 'pgrep  -f neutron-l3-agent',
-    }
+    } ~>
 
     exec { 'Cleanup p_neutron-l3-agent':
       command => 'pcs resource clear p_neutron-l3-agent',
       path    => '/usr/sbin:/bin:/sbin:/usr/bin',
       onlyif  => 'crm configure show | grep  cli-ban-p_neutron-l3-agent',
-    }
+    } ~>
 
     exec { 'Cleanup p_neutron-plugin-openvswitch-agent':
       command => 'pcs resource clear p_neutron-plugin-openvswitch-agent',
       path    => '/usr/sbin:/bin:/sbin:/usr/bin',
       onlyif  => 'crm configure show | grep cli-ban-p_neutron-plugin-openvswitch-agent',
-    }
+    } ~>
 
     exec { 'restart openvswitch restart':
       command => 'service openvswitch-switch restart',
