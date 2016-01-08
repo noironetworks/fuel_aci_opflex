@@ -140,7 +140,7 @@ class cisco_aci::opflex_ml2 (
             gbp                                => false,
             snat_gateway_mask                  => $snat_gateway_mask,
             optimized_dhcp                     => $optimized_dhcp,
-            optimized_metadata                 => false,
+            optimized_metadata                 => $optimized_metadata,
         }
     }
 

@@ -221,7 +221,7 @@ attributes:
   optimized_metadata:
     type: "checkbox"
     weight: 78
-    value: false
+    value: true
     label: "Enable Optimized Metadata"
   additional_config:
     type: "textarea"
