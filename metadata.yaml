@@ -3,7 +3,7 @@ name: aci_opflex
 # Human-readable name for your plugin
 title: ACI Opflex Plugin
 # Plugin version
-version: 0.9.5
+version: 0.9.10
 # Description
 description: Enable to setup Openstack with ACI and Opflex
 # Required fuel version

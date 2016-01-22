@@ -81,6 +81,18 @@ class opflex::opflex_agent (
         }
     }
 
+    file {'agent-ovs-upstart':
+         path => '/etc/init/agent-ovs.conf',
+         mode => '0644',
+         content => template('opflex/agent-ovs-upstart.erb'),
+         require => Package['agent-ovs'],
+    }
+    file {'patched-openvswitch-vswitch-init-script':
+         path => '/etc/init.d/openvswitch-switch',
+         mode => '0755',
+         content => template('opflex/openvswitch-switch-init-script.erb'),
+    }
+
     service {'agent-ovs':
        ensure => running,
        enable => true,
