@@ -20,11 +20,6 @@ groups: ['network']
 
 # The plugin is compatible with releases in the list
 releases:
-  - os: centos
-    version: 2014.2-6.1
-    mode: ['ha', 'multinode']
-    deployment_scripts_path: deployment_scripts/
-    repository_path: repositories/centos
   - os: ubuntu
     version: 2014.2-6.1
     mode: ['ha', 'multinode']

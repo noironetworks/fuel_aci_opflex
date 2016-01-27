@@ -1,5 +1,5 @@
 class opflex::opflex_agent (
-     $role = 'compute',
+     $roles = ['compute'],
      $ha_prefix = '',
      $opflex_log_level = 'debug2',
      $opflex_peer_ip = '10.0.0.30',
@@ -85,6 +85,12 @@ class opflex::opflex_agent (
        ensure => running,
        enable => true,
        require => File['agent-conf'],
+    }
+
+    file {'ovs_initd':
+        ensure => 'present',
+        path   => '/etc/init/agent-ovs.override',
+        source => 'puppet:///modules/cisco_aci/agent-ovs.override'
     }
 
     if ($opflex_encap_type == "vxlan") {
