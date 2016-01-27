@@ -69,6 +69,10 @@ case $install_type {
             ext_net_port                             => $aci_opflex_hash['ext_net_port'],
             ext_net_subnet                           => $aci_opflex_hash['ext_net_subnet'],
             ext_net_gateway                          => $aci_opflex_hash['ext_net_gateway'],
+	    ext_net_neutron_subnet                   => $aci_opflex_hash['ext_net_neutron_subnet'],
+	    ext_net_neutron_gateway                  => $aci_opflex_hash['ext_net_neutron_gateway'],
+	    ext_net_encap		             => $aci_opflex_hash['ext_net_encap'],
+            ext_net_router_id                        => $aci_opflex_hash['ext_net_router_id'],
             db_connection                            => $db_connection,
             ext_net_config                           => $aci_opflex_hash['ext_net_enable'],
             pre_existing_vpc                         => $aci_opflex_hash['use_pre_existing_vpc'],
@@ -120,6 +124,10 @@ case $install_type {
             ext_net_port                             => $aci_opflex_hash['ext_net_port'],
             ext_net_subnet                           => $aci_opflex_hash['ext_net_subnet'],
             ext_net_gateway                          => $aci_opflex_hash['ext_net_gateway'],
+            ext_net_neutron_subnet                   => $aci_opflex_hash['ext_net_neutron_subnet'],
+            ext_net_neutron_gateway                  => $aci_opflex_hash['ext_net_neutron_gateway'],
+            ext_net_encap                            => $aci_opflex_hash['ext_net_encap'],
+            ext_net_router_id                        => $aci_opflex_hash['ext_net_router_id'],
             db_connection                            => $db_connection,
             ext_net_config                           => $aci_opflex_hash['ext_net_enable'],
             pre_existing_vpc                         => $aci_opflex_hash['use_pre_existing_vpc'],
@@ -150,6 +158,10 @@ case $install_type {
             ext_net_port                             => $aci_opflex_hash['ext_net_port'],
             ext_net_subnet                           => $aci_opflex_hash['ext_net_subnet'],
             ext_net_gateway                          => $aci_opflex_hash['ext_net_gateway'],
+            ext_net_neutron_subnet                   => $aci_opflex_hash['ext_net_neutron_subnet'],
+            ext_net_neutron_gateway                  => $aci_opflex_hash['ext_net_neutron_gateway'],
+            ext_net_encap                            => $aci_opflex_hash['ext_net_encap'],
+            ext_net_router_id                        => $aci_opflex_hash['ext_net_router_id'],
             db_connection                            => $db_connection,
             ext_net_config                           => $aci_opflex_hash['ext_net_enable'],
             pre_existing_vpc                         => $aci_opflex_hash['use_pre_existing_vpc'],
@@ -171,3 +183,4 @@ case $install_type {
         fail("Wrong module ${module_name}")
     }
 }
+
