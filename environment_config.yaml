@@ -16,8 +16,8 @@ attributes:
         label: "ML2"
         description: "ML2 Driver"
       - data: "GBP"
-        label: "Group Based Policy"
-        description: "Group Based Policy Driver"
+        label: "Group Based Policy - beta"
+        description: "Group Based Policy Driver - beta"
   apic_hosts:
     value: '10.0.0.100'
     label: 'APIC Host'
@@ -204,9 +204,45 @@ attributes:
     restrictions:
         - condition: "settings:aci_opflex.ext_net_enable.value == false"
           action: hide
-  snat_gateway_mask:
+  ext_net_router_id:
     type: "text"
     weight: 76
+    value: "1.0.0.2"
+    label: "Router ID:"
+    description: "Router ID from Cisco APIC"
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == false"
+          action: hide
+  ext_net_encap:
+    type: "text"
+    weight: 76
+    value: "vlan-1031"
+    label: "Enacp vlan ID:"
+    description: "Vlan encapsulation ID for Cisco APIC. Example: vlan-1031"
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == false"
+          action: hidea
+  ext_net_neutron_subnet:
+    type: "text"
+    weight: 77
+    value: "10.0.0.0/24"
+    label: "Neutron external subnet range:"
+    description: "CIDR for neutron external network"
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == false"
+          action: hide
+  ext_net_neutron_gateway:
+    type: "text"
+    weight: 78
+    value: "10.0.0.1"
+    label: "Neutron external Gateway IP:"
+    description: "IP address of the neutron external gateway"
+    restrictions:
+        - condition: "settings:aci_opflex.ext_net_enable.value == false"
+          action: hide
+  snat_gateway_mask:
+    type: "text"
+    weight: 79
     value: '1.1.1.1/24'
     label: "SNAT Gateway/Mask:"
     description: "SNAT gateway and number of mask bits"
@@ -215,17 +251,17 @@ attributes:
       error: "Invalid Gateway / Mask bits"
   optimized_dhcp:
     type: "checkbox"
-    weight: 77
+    weight: 80
     value: true
     label: "Enable Optimized DHCP"
   optimized_metadata:
     type: "checkbox"
-    weight: 78
-    value: false
+    weight: 81
+    value: true
     label: "Enable Optimized Metadata"
   additional_config:
     type: "textarea"
-    weight: 79
+    weight: 82
     value: ""
     label: "Additional config"
     description: "Example:\nml2_cisco_apic/apic_vpc_pairs=201:202,203:204"
