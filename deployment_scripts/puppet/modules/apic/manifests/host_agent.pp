@@ -15,10 +15,10 @@ class apic::host_agent (
         }
     }
 
-    package { 'apic_ml2_driver':
-        ensure => $package_ensure,
-        name   => $::apic::params::package_neutron_ml2_driver_apic,
-    }
+    #package { 'apic_ml2_driver':
+    #    ensure => $package_ensure,
+    #    name   => $::apic::params::package_neutron_ml2_driver_apic,
+    #}
 
     service { 'apic-host-agent':
         ensure     => $service_ensure,

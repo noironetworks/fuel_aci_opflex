@@ -40,10 +40,23 @@ class neutron::compute_neutron_metadata (
     }
   }
 
-  file {'/usr/bin/neutron-metadata-agent':
-     mode    => '0755',
-     content => template('neutron/neutron-metadata-agent.erb'),
-     owner   => 'root',
-     group   => 'root',
+  $openstack_version = hiera('openstack_version')
+ 
+  if $openstack_version =~ /^2015/ {
+     file {'/usr/bin/neutron-metadata-agent':
+        mode    => '0755',
+        content => template('neutron/neutron-metadata-agent-kilo.erb'),
+        owner   => 'root',
+        group   => 'root',
+     }
+  }
+
+  if $openstack_version =~ /^2014/ {
+     file {'/usr/bin/neutron-metadata-agent':
+        mode    => '0755',
+        content => template('neutron/neutron-metadata-agent.erb'),
+        owner   => 'root',
+        group   => 'root',
+     }
   }
 }

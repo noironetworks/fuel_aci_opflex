@@ -88,6 +88,11 @@ case $install_type {
             optimized_metadata                       => $aci_opflex_hash['optimized_metadata'],
        }
        if $role == "compute" {
+           service {'neutron-opflex-agent':
+              ensure => running,
+              enable => true,
+           }
+
            class {'neutron::compute_neutron_metadata':
                 debug          => $debug,
                 auth_region    => $auth_region,
@@ -97,6 +102,7 @@ case $install_type {
                 auth_password  => $neutron_user_password, 
                 shared_secret  => $neutron_metadata_proxy_secret,
                 metadata_ip    => $service_endpoint,
+                notify         => Service['neutron-opflex-agent'],
            }
        }
     }
