@@ -12,7 +12,6 @@ Puppet::Type.type(:neutron_router).provide(
   EOT
 
   commands :neutron => 'neutron'
-  commands :keystone => 'keystone'
 
   mk_resource_methods
 
@@ -52,7 +51,7 @@ Puppet::Type.type(:neutron_router).provide(
     end
 
     if @resource[:tenant_name]
-      tenant_id = self.class.get_tenant_id(model.catalog,
+      tenant_id = self.class.get_tenant_id(@resource.catalog,
                                            @resource[:tenant_name])
       opts << "--tenant_id=#{tenant_id}"
     elsif @resource[:tenant_id]
@@ -120,7 +119,7 @@ EOT
   end
 
   def parse_gateway_network_id(external_gateway_info_)
-    match_data = /\{"network_id": "(.*?)"/.match(external_gateway_info_)
+    match_data = /\{"network_id": "(.*?)"/.match(external_gateway_info_.gsub(/\\"/,'"'))
     if match_data
       match_data[1]
     else

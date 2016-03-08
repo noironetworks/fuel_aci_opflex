@@ -13,7 +13,6 @@ Puppet::Type.type(:neutron_port).provide(
   #TODO No security group support
 
   commands :neutron => "neutron"
-  commands :keystone => 'keystone'
 
   mk_resource_methods
 
@@ -73,7 +72,7 @@ Puppet::Type.type(:neutron_port).provide(
 
     if @resource[:tenant_name]
       tenant_id = self.class.get_tenant_id(
-        model.catalog,
+        @resource.catalog,
         @resource[:tenant_name]
       )
       opts << "--tenant_id=#{tenant_id}"

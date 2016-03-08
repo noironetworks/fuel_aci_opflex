@@ -20,6 +20,10 @@ class cisco_aci::opflex_gbp (
     $ext_net_port                       = '1/1',
     $ext_net_subnet                     = '10.0.0.0/24',
     $ext_net_gateway                    = '10.0.0.1',
+    $ext_net_encap                      = '',
+    $ext_net_router_id                  = '',
+    $ext_net_neutron_subnet             = '10.0.0.0/24',
+    $ext_net_neutron_gateway            = '10.0.0.1',
     $db_connection                      = '',
     $ext_net_config                     = false,
     $pre_existing_vpc                   = true,
@@ -48,7 +52,9 @@ class cisco_aci::opflex_gbp (
     }
 
     if ($ext_net_enable == true) {
-        $apic_external_network = $ext_net_name
+       $external_network = $ext_net_name
+    } else {
+       $external_network = $apic_external_network
     }
 
     case $role {
@@ -73,8 +79,8 @@ class cisco_aci::opflex_gbp (
                 class {'neutron::network':
                     tenant_name     => $admin_tenant,
                     ext_net_name    => $ext_net_name,
-                    ext_net_subnet  => $ext_net_subnet,
-                    ext_net_gateway => $ext_net_gateway,
+                    ext_net_subnet  => $ext_net_neutron_subnet,
+                    ext_net_gateway => $ext_net_neutron_gateway,
                 }
 
             }
@@ -143,10 +149,12 @@ class cisco_aci::opflex_gbp (
                 ext_net_subnet                     => $ext_net_subnet,
                 ext_net_gateway                    => $ext_net_gateway,
                 ext_net_config                     => $ext_net_config,
+                ext_net_encap                      => $ext_net_encap,
+                ext_net_router_id                  => $ext_net_router_id,
                 pre_existing_vpc                   => $pre_existing_vpc,
                 pre_existing_l3_context            => $pre_existing_l3_context,
                 shared_context_name                => $shared_context_name,
-                apic_external_network              => $apic_external_network,
+                apic_external_network              => $external_network,
                 pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
                 gbp                                => true,

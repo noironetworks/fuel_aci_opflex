@@ -117,7 +117,7 @@ Cisco ACI Opflex Configuration
    #. Static config - This only recommended for use of advanced features of the system, such as statically server connectivity with the fabric.
    #. Use pre-existing VPC links - If selected, OpenStack expects the user to have preconfigured VPC links in the APIC. If not selected, then OpenStack will create the VPC links for the user.
    #. Pre-existing shared l3context - If selected, the APIC has been preconfigured with a Layer 3 context matching the “Shared Context Name” field. This Layer 3 context is used as a default Layer 3 context for configurations in the APIC.
-   #.  APIC external network - This is the name of the external network used in the ACI fabric. This name must match the name of the external network created by the user in OpenStack.
+   #. APIC external network - This is the name of the external network used in the ACI fabric. This name must match the name of the external network created by the user in OpenStack.
    #. Use pre-existing external network - If selected, the APIC has been preconfigured with the external network used for the OpenStack external network. This option should not be selected if the “Configure external network” option has been set.
    #. Configure external network - If enabled, the APIC ML2 Mechanism Driver configures an the external network in APIC whenever the user creates an external network in OpenStack. This requires the user to provide the parameters for the external network, and should not be selected if the “Use pre-existing external network” option has been selected. These parameters can be provided via key/value pairs in the   “Additional config” field. The format of this configuration is:
 
@@ -138,6 +138,8 @@ Cisco ACI Opflex Configuration
    #. Additional config - This field is used to pass additional configuration file parameters used by the plugin, via key/value pairs. This only recommended for use of advanced features of the system. 
    #. OpenStack system ID - This is the name used as the ACI Tenant for OpenStack. The Endpoint Groups, Bridge Domains, Networks, and related objects all appear under this tenant in the ACI GUI.
    #. External EPG name - This field is used as the name of the Network created under the External Routed Network in the APIC to provide the L3 Out policy, allowing traffic to enter and exit the fabric.
+   #. Enable Optimized DHCP - This field is used to define where dhcp server should be running.
+   #. Enable Optimized Metadata - This field is used to define where neutron metadata server should be running.
 
 #.  Configure the rest of network settings. See details at Mirantis OpenStack User Guide.
       The rest network configuration is up to you. See Mirantis OpenStack User Guide for instructions to configure other networking options. 
