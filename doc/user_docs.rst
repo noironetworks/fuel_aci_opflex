@@ -1,5 +1,5 @@
 ************************************************************
-Guide to the Cisco ACI Opflex Plugin version 1.0.1 for Fuel
+Guide to the Cisco ACI Opflex Plugin version 7.0.7 for Fuel
 ************************************************************
 
 This document provides instructions for installing, configuring and using
@@ -42,7 +42,7 @@ Requirements
 ===================================   ==================
 Requirement                           Version/Comment
 ===================================   ==================
-Fuel                                  6.1
+Fuel                                  7.0
 Cisco ACI                             1.1(4e)
 ===================================   ==================
 
@@ -63,12 +63,12 @@ Cisco ACI Opflex installation
 #. Download Cisco ACI/GBP plugin from the Fuel Plugins Catalog.
 #. Copy the rpm downloaded at previous step to the Fuel Master node and install the plugin:
 
-scp cisco-aci.1.0.1.noarch.rpm  <Fuel Master node ip>:/tmp/
+scp cisco-aci.7.0.7.noarch.rpm  <Fuel Master node ip>:/tmp/
 
 #. Log into the Fuel Master node and install the plugin:
 
-ssh <the Fuel Master node ip> 
-fuel plugins --install /tmp/cisco-aci-1.0.1.noarch.rpm
+ssh <the Fuel Master node ip>
+fuel plugins --install /tmp/cisco-aci-7.0.7.noarch.rpm
 
 You should get the following output:
 Plugin <plugin-name-version>.rpm was successfully installed
@@ -76,7 +76,7 @@ Plugin <plugin-name-version>.rpm was successfully installed
 
 #. Copy  install package (obtained from Cisco by subscription, see Prerequisites above) to the Fuel Master node and run the installation script to unpack the vendor package and populate plugin repository:
 
-scp \*.deb <Fuel Master node ip>:/var/www/nailgun/plugins/cisco-aci-1.0.1/repositories/ubuntu/
+scp \*.deb <Fuel Master node ip>:/var/www/nailgun/plugins/cisco-aci-7.0.7/repositories/ubuntu/
 
 
 Cisco ACI Opflex Configuration
@@ -113,7 +113,7 @@ Cisco ACI Opflex Configuration
 
    #. SET APIC Host, Username and password (if those data will be incorrect deploy will fail)
    #. Set encapsulation mode, Infra vlan, Gateway and context name.
-   #. This field is used to pass additional configuration parameters to the plugin, via key/value pairs.    
+   #. This field is used to pass additional configuration parameters to the plugin, via key/value pairs.
    #. Static config - This only recommended for use of advanced features of the system, such as statically server connectivity with the fabric.
    #. Use pre-existing VPC links - If selected, OpenStack expects the user to have preconfigured VPC links in the APIC. If not selected, then OpenStack will create the VPC links for the user.
    #. Pre-existing shared l3context - If selected, the APIC has been preconfigured with a Layer 3 context matching the “Shared Context Name” field. This Layer 3 context is used as a default Layer 3 context for configurations in the APIC.
@@ -135,14 +135,14 @@ Cisco ACI Opflex Configuration
       | gateway_ip=10.10.40.1
 
 
-   #. Additional config - This field is used to pass additional configuration file parameters used by the plugin, via key/value pairs. This only recommended for use of advanced features of the system. 
+   #. Additional config - This field is used to pass additional configuration file parameters used by the plugin, via key/value pairs. This only recommended for use of advanced features of the system.
    #. OpenStack system ID - This is the name used as the ACI Tenant for OpenStack. The Endpoint Groups, Bridge Domains, Networks, and related objects all appear under this tenant in the ACI GUI.
    #. External EPG name - This field is used as the name of the Network created under the External Routed Network in the APIC to provide the L3 Out policy, allowing traffic to enter and exit the fabric.
    #. Enable Optimized DHCP - This field is used to define where dhcp server should be running.
    #. Enable Optimized Metadata - This field is used to define where neutron metadata server should be running.
 
 #.  Configure the rest of network settings. See details at Mirantis OpenStack User Guide.
-      The rest network configuration is up to you. See Mirantis OpenStack User Guide for instructions to configure other networking options. 
+      The rest network configuration is up to you. See Mirantis OpenStack User Guide for instructions to configure other networking options.
 
 #. And finally, click Deploy changes to deploy the environment.
 
