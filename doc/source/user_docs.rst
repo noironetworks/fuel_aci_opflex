@@ -105,6 +105,7 @@ Cisco ACI Opflex Configuration
 #. Open Settings tab of the Fuel Web UI and scroll the page down. Select the plugin checkbox:
 
    .. image:: pics/5.png
+   .. image:: pics/6.png
 
 #. Fill the plugin configuration fields with correct values:
 
@@ -152,8 +153,8 @@ Appendix
 ========
 
 Provide any links to external resources or documentation here.
-   #. `ACI with OpenStack OpFlex Deployment Guide for Ubuntu docs <.http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Deployment_Guide_for_Ubuntu.pdf>`_.
-   #. `Cisco api ml2 driver docs <.https://wiki.openstack.org/wiki/Neutron/Cisco-APIC-ML2-driver/>`_.
-   #. `Cisco OpFlex Architectural Overview <.http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Architectural_Overview.pdf>`_.
+   #. `ACI with OpenStack OpFlex Deployment Guide for Ubuntu docs <http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Deployment_Guide_for_Ubuntu.pdf>`_.
+   #. `Cisco api ml2 driver docs <https://wiki.openstack.org/wiki/Neutron/Cisco-APIC-ML2-driver/>`_.
+   #. `Cisco OpFlex Architectural Overview <http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Architectural_Overview.pdf>`_.
 
 

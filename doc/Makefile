@@ -4,21 +4,27 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-PAPER         = letter
-BUILDDIR      = _pdf
+PAPER         =
+BUILDDIR      = build
+
+# User-friendly check for sphinx-build
+ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
+$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
+endif
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 # the i18n builder cannot share the environment and doctrees with the others
-I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
+# SVG to PDF conversion
+SVG2PDF         = inkscape
+SVG2PDF_FLAGS	=
+# Build a list of SVG files to convert to PDF
+PDF_FILES := $(foreach dir, images, $(patsubst %.svg,%.pdf,$(wildcard $(dir)/*.svg)))
 
-IMAGEDIRS     = _images
-
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp \
-	epub latex latexpdf pdf text man changes linkcheck doctest gettext spell \
-	spell_all
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -33,45 +39,33 @@ help:
 	@echo "  epub       to make an epub"
 	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
+	@echo "  latexpdfja to make LaTeX files and run them through platex/dvipdfmx"
 	@echo "  text       to make text files"
-	@echo "  pdf        to make pdf files"
 	@echo "  man        to make manual pages"
 	@echo "  texinfo    to make Texinfo files"
 	@echo "  info       to make Texinfo files and run them through makeinfo"
 	@echo "  gettext    to make PO message catalogs"
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
+	@echo "  xml        to make Docutils-native XML files"
+	@echo "  pseudoxml  to make pseudoxml-XML files for display purposes"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
-	@echo "  spell      to run aspell against .rst files changed in current commit"
-	@echo "  spell_all  to run aspell against all .rst files in pages/ directory"
 
 clean:
-	-rm -rf $(BUILDDIR)/*
-	-@rm -f $(PDFs)
+	rm -rf $(BUILDDIR)/*
+	rm -f $(PDF_FILES)
 
-# Pattern rule for converting SVG to PDF
-%.pdf : %.svg
-	inkscape -f $< -A $@
-
-# Build a list of SVG files to convert to PDFs
-PDFs := $(foreach dir, $(IMAGEDIRS), $(patsubst %.svg,%.pdf,$(wildcard $(dir)/*.svg)))
-
-# Make a rule to build all images
-images: $(PDFs)
-
-all: clean html dirhtml singlehtml latexpdf pdf
-
-rawhtml: images
+html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-dirhtml: images
+dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
-singlehtml: images
+singlehtml:
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
@@ -86,51 +80,52 @@ json:
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
-htmlhelp: images
+htmlhelp:
 	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-qthelp: images
+qthelp:
 	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/fuel.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/LMAcollector.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/fuel.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/LMAcollector.qhc"
 
-devhelp: images
+devhelp:
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/fuel"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/fuel"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/LMAcollector"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/LMAcollector"
 	@echo "# devhelp"
 
-epub: images
+epub:
 	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
 
-latex: images
+latex:
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Run \`make' in that directory to run these through (pdf)latex" \
 	      "(use \`make latexpdf' here to do that automatically)."
 
-pdf: images
-	$(SPHINXBUILD) -b pdf -c pdf $(ALLSPHINXOPTS) $(BUILDDIR)/pdf
-	@echo
-	@echo "Build finished; the PDF file is in $(BUILDDIR)/pdf."
-
-latexpdf: images
+latexpdf:
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo "Running LaTeX files through pdflatex..."
 	$(MAKE) -C $(BUILDDIR)/latex all-pdf
+	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
+
+latexpdfja:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	@echo "Running LaTeX files through platex and dvipdfmx..."
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf-ja
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
 
 text:
@@ -177,24 +172,12 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-html: rawhtml
-	./lunr.py
+xml:
+	$(SPHINXBUILD) -b xml $(ALLSPHINXOPTS) $(BUILDDIR)/xml
 	@echo
-	@echo "Lunr search index complete"
+	@echo "Build finished. The XML files are in $(BUILDDIR)/xml."
 
-SPELL = aspell
-ASPELLOPTS = --dont-backup -d en --personal=.aspell_en.wordlist
-RSTS := $(shell find pages/ -type f -name '*.rst')
-
-COMMIT_RSTS := $(shell git diff-tree --no-commit-id --name-only -r HEAD)
-spell:
-	@for rst in $(COMMIT_RSTS); do \
-		$(SPELL) $(ASPELLOPTS) check $$rst; \
-	done
-
-spell_all:
-	@for rst in $(RSTS); do \
-		$(SPELL) $(ASPELLOPTS) check $$rst; \
-	done
-	@echo "Spell check complete"
-
+pseudoxml:
+	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
+	@echo
+	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
