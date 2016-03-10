@@ -80,6 +80,9 @@ Plugin <plugin-name-version>.rpm was successfully installed
 
 scp \*.deb <Fuel Master node ip>:/var/www/nailgun/plugins/cisco-aci-7.0.7/repositories/ubuntu/
 
+#. Remember to update Packages.gz after update packages:
+
+dpkg-scanpackages -m . /dev/null | gzip -9c > Packages.gz
 
 Cisco ACI Opflex Configuration
 ----------------------------------------
