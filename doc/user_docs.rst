@@ -10,19 +10,21 @@ Key terms, acronyms and abbreviations
 
 Cisco ACI/GBP
     The Cisco® Application Policy Infrastructure Controller (APIC) was designed based on open APIs, allowing it to be tightly integrated with cloud orchestration platforms such as OpenStack.
-SDN
-    Software defined network
-RESTful API
-    Representational state transfer
 BGP
     Border gateway protocol
+GBP
+    Group Based Policy
+RESTful API
+    Representational state transfer
+SDN
+    Software defined network
 MOS
     Mirantis OpenStack
 
 Cisco ACI Opflex
 ===================
 
-Cisco ACI/GBP plugin for Fuel provides the functionality to add Cisco ACI/GB for Mirantis OpenStack as networking backend option using Fuel Web UI in a user-friendly manner.
+Cisco ACI/GBP plugin for Fuel provides the functionality to add Cisco ACI/GBP for Mirantis OpenStack as networking backend option using Fuel Web UI in a user-friendly manner.
 
 
 License
@@ -49,7 +51,7 @@ Cisco ACI                             1.1(4e)
 Limitations
 -----------
 
-During deploy its impossible to add default network to Cisco ACI so defaults network deployed by MOS called net04 and net04_ext and virtual router router04 is need to be removed after deployment and create one more time. Those networks and router are needed to run health check after deployment.
+During deploy its impossible to add default networks to Cisco ACI so default networks deployed by MOS called net04 and net04_ext and virtual router router04 need to be removed after deployment and created one more time. Those networks and router are used to run a health check after deployment.
 
 
 Installation Guide
@@ -74,7 +76,7 @@ You should get the following output:
 Plugin <plugin-name-version>.rpm was successfully installed
 
 
-#. Copy  install package (obtained from Cisco by subscription, see Prerequisites above) to the Fuel Master node and run the installation script to unpack the vendor package and populate plugin repository:
+#. Copy  installed package (obtained from Cisco by subscription, see Prerequisites above) to the Fuel Master node and run the installation script to unpack the vendor package and populate plugin repository:
 
 scp \*.deb <Fuel Master node ip>:/var/www/nailgun/plugins/cisco-aci-7.0.7/repositories/ubuntu/
 
@@ -111,10 +113,10 @@ Cisco ACI Opflex Configuration
       .. Warning::
          GBP mode is beta (not tested)
 
-   #. SET APIC Host, Username and password (if those data will be incorrect deploy will fail)
+   #. SET APIC Host, Username and password (if these are incorrect, the deploy will fail)
    #. Set encapsulation mode, Infra vlan, Gateway and context name.
    #. This field is used to pass additional configuration parameters to the plugin, via key/value pairs.
-   #. Static config - This only recommended for use of advanced features of the system, such as statically server connectivity with the fabric.
+   #. Static config - This only recommended for use of advanced features of the system, such as statically configured server connectivity with the fabric.
    #. Use pre-existing VPC links - If selected, OpenStack expects the user to have preconfigured VPC links in the APIC. If not selected, then OpenStack will create the VPC links for the user.
    #. Pre-existing shared l3context - If selected, the APIC has been preconfigured with a Layer 3 context matching the “Shared Context Name” field. This Layer 3 context is used as a default Layer 3 context for configurations in the APIC.
    #. APIC external network - This is the name of the external network used in the ACI fabric. This name must match the name of the external network created by the user in OpenStack.
@@ -151,6 +153,7 @@ Appendix
 ========
 
 Provide any links to external resources or documentation here.
+   #. `ACI with OpenStack OpFlex Deployment Guide for Ubuntu docs <.http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Deployment_Guide_for_Ubuntu.pdf>`_.
    #. `Cisco api ml2 driver docs <.https://wiki.openstack.org/wiki/Neutron/Cisco-APIC-ML2-driver/>`_.
-   #. OpFlex dosc
+   #. OpFlex docs
 
