@@ -24,7 +24,7 @@ MOS
 Cisco ACI Opflex
 ===================
 
-Cisco ACI/GBP plugin for Fuel provides the functionality to add Cisco ACI/GBP for Mirantis OpenStack as networking backend option using Fuel Web UI in a user-friendly manner.
+Cisco ACI/GBP plugin for Fuel provides the functionality to add Cisco ACI/GB for Mirantis OpenStack as networking backend option using Fuel Web UI in a user-friendly manner.
 
 
 License
@@ -45,7 +45,7 @@ Requirements
 Requirement                           Version/Comment
 ===================================   ==================
 Fuel                                  7.0
-Cisco ACI                             1.1(4e)
+Cisco ACI                             1.1(4e) or later
 ===================================   ==================
 
 Limitations
@@ -118,7 +118,6 @@ Cisco ACI Opflex Configuration
    #. This field is used to pass additional configuration parameters to the plugin, via key/value pairs.
    #. Static config - This only recommended for use of advanced features of the system, such as statically configured server connectivity with the fabric.
    #. Use pre-existing VPC links - If selected, OpenStack expects the user to have preconfigured VPC links in the APIC. If not selected, then OpenStack will create the VPC links for the user.
-   #. Pre-existing shared l3context - If selected, the APIC has been preconfigured with a Layer 3 context matching the “Shared Context Name” field. This Layer 3 context is used as a default Layer 3 context for configurations in the APIC.
    #. APIC external network - This is the name of the external network used in the ACI fabric. This name must match the name of the external network created by the user in OpenStack.
    #. Use pre-existing external network - If selected, the APIC has been preconfigured with the external network used for the OpenStack external network. This option should not be selected if the “Configure external network” option has been set.
    #. Configure external network - If enabled, the APIC ML2 Mechanism Driver configures an the external network in APIC whenever the user creates an external network in OpenStack. This requires the user to provide the parameters for the external network, and should not be selected if the “Use pre-existing external network” option has been selected. These parameters can be provided via key/value pairs in the   “Additional config” field. The format of this configuration is:

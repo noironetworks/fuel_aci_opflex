@@ -27,7 +27,7 @@ class cisco_aci::opflex_gbp (
     $db_connection                      = '',
     $ext_net_config                     = false,
     $pre_existing_vpc                   = true,
-    $pre_existing_l3_context            = true,
+    $pre_existing_l3_context            = false,
     $shared_context_name                = '',
     $apic_external_network              = '',
     $pre_existing_external_network_on   = '',

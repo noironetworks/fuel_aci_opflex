@@ -105,21 +105,12 @@ attributes:
     value: true
     label: "Use pre-existing VPC links"
     description: "Use pre-existing VPC configuration as configured in APIC"
-  use_pre_existing_l3context:
-    type: "checkbox"
-    weight: 54
-    value: true
-    label: "Pre-existing shared l3context"
-    description: "Use pre-existing shared l3context"
   shared_context_name:
     type: "text"
     weight: 55
     value: "ehnet_shared"
     label: "Shared context name:"
     description: "Specify a text-field with the name of this l3-context which will then used as shared_context_name"
-    restrictions:
-        - condition: "settings:aci_opflex.use_pre_existing_l3context.value == false"
-          action: hide
   apic_system_id:
     type: "text"
     weight: 56
@@ -172,8 +163,8 @@ attributes:
     type: "text"
     weight: 72
     value: "10.0.0.0/24"
-    label: "Subnet range:"
-    description: "CIDR for external network"
+    label: "IP with netmask for the edge switch port:"
+    description: "IP with netmask for the edge switch port"
     restrictions:
         - condition: "settings:aci_opflex.ext_net_enable.value == false"
           action: hide
@@ -244,8 +235,8 @@ attributes:
     type: "text"
     weight: 79
     value: '1.1.1.1/24'
-    label: "SNAT Gateway/Mask:"
-    description: "SNAT gateway and number of mask bits"
+    label: "SNAT subnet network:"
+    description: "SNAT subnet network"
     regex:
       source: '^(?:(?:[0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}(?:[1-9]|[1-9][1-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\/([1-9]|[1-2]\d|3[0-2])$'
       error: "Invalid Gateway / Mask bits"
