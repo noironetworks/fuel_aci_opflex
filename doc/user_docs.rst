@@ -154,4 +154,6 @@ Appendix
 Provide any links to external resources or documentation here.
    #. `ACI with OpenStack OpFlex Deployment Guide for Ubuntu docs <.http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Deployment_Guide_for_Ubuntu.pdf>`_.
    #. `Cisco api ml2 driver docs <.https://wiki.openstack.org/wiki/Neutron/Cisco-APIC-ML2-driver/>`_.
+   #. `Cisco OpFlex Architectural Overview <.http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Architectural_Overview.pdf>`_.
+
 
