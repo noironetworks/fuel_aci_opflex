@@ -65,8 +65,8 @@ attributes:
       error: "Error field cannot be empty, has to be numeric"
   apic_infra_subnet_gateway:
     value: '10.0.0.30'
-    label: 'APIC Infra Subnet Gateway'
-    description: 'APIC infra tenant, default BD subnet'
+    label: 'APIC Infra any-cast address'
+    description: 'Any-cast address used by agent-ovs on network/compute nodes to talk to the leaf'
     weight: 47
     type: "text"
     regex:
@@ -105,12 +105,6 @@ attributes:
     value: true
     label: "Use pre-existing VPC links"
     description: "Use pre-existing VPC configuration as configured in APIC"
-  shared_context_name:
-    type: "text"
-    weight: 55
-    value: "ehnet_shared"
-    label: "Shared context name:"
-    description: "Specify a text-field with the name of this l3-context which will then used as shared_context_name"
   apic_system_id:
     type: "text"
     weight: 56

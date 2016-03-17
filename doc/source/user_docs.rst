@@ -24,7 +24,7 @@ MOS
 Cisco ACI Opflex
 ===================
 
-Cisco ACI/GBP plugin for Fuel provides the functionality to add Cisco ACI/GB for Mirantis OpenStack as networking backend option using Fuel Web UI in a user-friendly manner.
+Cisco ACI/GBP plugin for Fuel provides the functionality to add Cisco ACI/GBP for Mirantis OpenStack as networking backend option using Fuel Web UI in a user-friendly manner.
 
 
 License
