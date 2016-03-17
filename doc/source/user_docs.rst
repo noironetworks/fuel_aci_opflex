@@ -1,6 +1,6 @@
-************************************************************
-Guide to the Cisco ACI Opflex Plugin version 7.0.7 for Fuel
-************************************************************
+*******************************************************************
+Guide to the Cisco ACI Opflex Plugin version 7.0.-7.0.7.-1 for Fuel
+*******************************************************************
 
 This document provides instructions for installing, configuring and using
 Cisco ACI opflex plugin for Fuel.
@@ -151,6 +151,13 @@ Cisco ACI Opflex Configuration
 
 #. And finally, click Deploy changes to deploy the environment.
 
+Verification
+============
+Verification that plugin was installed successful:
+  #. Create new network and make sure that provider:network_type is "opflex"
+  #. Spawn new instance and check if on compute where vm was spawned .ep file was created in /var/lib/opflex-agent-ovs/endpoints directory with with name of mac address of instance
+  #. Make sure that on all nodes agent_ovs service are running
+  #. Check neutron logs to make sure there is no logs with error severity
 
 Appendix
 ========
