@@ -9,7 +9,7 @@ project = u'The Cisco ACI Opflex plugin for Fuel'
 copyright = u'2016, Mirantis Inc.'
 
 version = '7.0'
-release = '7.0.7'
+release = '7.0.-7.0.7.-1'
 
 exclude_patterns = []
 
