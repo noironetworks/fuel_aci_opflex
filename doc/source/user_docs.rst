@@ -159,6 +159,13 @@ Verification that plugin was installed successful:
   #. Make sure that on all nodes agent_ovs service are running
   #. Check neutron logs to make sure there is no logs with error severity
 
+Limitations
+===========
+   #. To validate deploy openstack enviroment we are able to run health checks. During execution check called 'Check pacemaker status' we will see error: 'Resource clone_p_neutron-l3-agent allowed to start on the nodes [], but it is not started on any node' its expected because during deploy plugin remove those resource from pacemaker.
+   #. To run most tast cases in health checks tab we need to manualy create networks called ne04, net04_ext (external), and router router04 with gateway in net04_ext and intefrace in net04. Plugin remove those networks and router during deploy because after deploy (before plugin start working) those networks are created with provider:network_type 'vlan' and its need to be 'opflex'.
+   #. During redeploy process of opentsack enviroment we are able to remove/add primary controller, to make this operation funcional we cannot have during redeploy networks called net04 or net04_ext because during those operation default fuel try to change type for network from 'opflex' to 'vlan' and those operation cannot be done.
+
+
 Appendix
 ========
 
