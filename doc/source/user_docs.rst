@@ -161,6 +161,7 @@ Verification that plugin was installed successful:
 
 Limitations
 ===========
+Know limitation of plugin:
    #. To validate deploy openstack enviroment we are able to run health checks. During execution check called 'Check pacemaker status' we will see error: 'Resource clone_p_neutron-l3-agent allowed to start on the nodes [], but it is not started on any node' its expected because during deploy plugin remove those resource from pacemaker.
    #. To run most tast cases in health checks tab we need to manualy create networks called ne04, net04_ext (external), and router router04 with gateway in net04_ext and intefrace in net04. Plugin remove those networks and router during deploy because after deploy (before plugin start working) those networks are created with provider:network_type 'vlan' and its need to be 'opflex'.
    #. During redeploy process of opentsack enviroment we are able to remove/add primary controller, to make this operation funcional we cannot have during redeploy networks called net04 or net04_ext because during those operation default fuel try to change type for network from 'opflex' to 'vlan' and those operation cannot be done.
@@ -169,7 +170,7 @@ Limitations
 Appendix
 ========
 
-Provide any links to external resources or documentation here.
+Links to external resources or documentation:
    #. `ACI with OpenStack OpFlex Deployment Guide for Ubuntu docs <http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Deployment_Guide_for_Ubuntu.pdf>`_.
    #. `Cisco api ml2 driver docs <https://wiki.openstack.org/wiki/Neutron/Cisco-APIC-ML2-driver/>`_.
    #. `Cisco OpFlex Architectural Overview <http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Architectural_Overview.pdf>`_.
