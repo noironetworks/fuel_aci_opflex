@@ -65,7 +65,7 @@ Cisco ACI Opflex installation
 #. Download Cisco ACI/GBP plugin from the Fuel Plugins Catalog.
 #. Copy the rpm downloaded at previous step to the Fuel Master node and install the plugin:
 
-scp aci_opflex.7.0.7.noarch.rpm  <Fuel Master node ip>:/tmp/
+scp aci_opflex-7.0-7.0.7-1.noarch.rpm  <Fuel Master node ip>:/tmp/
 
 #. Log into the Fuel Master node and install the plugin:
 
