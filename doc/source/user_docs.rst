@@ -70,7 +70,7 @@ scp aci_opflex.7.0.7.noarch.rpm  <Fuel Master node ip>:/tmp/
 #. Log into the Fuel Master node and install the plugin:
 
 ssh <the Fuel Master node ip>
-fuel plugins --install /tmp/aci_opflex-7.0.7.noarch.rpm
+fuel plugins --install /tmp/aci_opflex-7.0-7.0.7-1.noarch.rpm
 
 You should get the following output:
 Plugin <plugin-name-version>.rpm was successfully installed
@@ -78,7 +78,7 @@ Plugin <plugin-name-version>.rpm was successfully installed
 
 #. Copy  installed package (obtained from Cisco by subscription, see Prerequisites above) to the Fuel Master node and run the installation script to unpack the vendor package and populate plugin repository:
 
-scp \*.deb <Fuel Master node ip>:/var/www/nailgun/plugins/aci_opflex-7.0.7/repositories/ubuntu/
+scp \*.deb <Fuel Master node ip>:/var/www/nailgun/plugins/aci_opflex-7.0/repositories/ubuntu/
 
 #. Remember to update Packages.gz after update packages:
 
