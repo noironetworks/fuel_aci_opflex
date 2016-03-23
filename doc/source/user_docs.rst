@@ -51,8 +51,11 @@ Cisco ACI                             1.1(4e) or later
 Limitations
 -----------
 
-During deploy its impossible to add default networks to Cisco ACI so default networks deployed by MOS called net04 and net04_ext and virtual router router04 need to be removed after deployment and created one more time. Those networks and router are used to run a health check after deployment.
-
+Know limitation of plugin:
+   #. To validate deployed OpenStack environment we are able to run health checks. During execution check called 'Check pacemaker status' we will see error: 'Resource clone_p_neutron-l3-agent allowed to start on the nodes [], but it is not started on any node' its expected because during deploy plugin remove those resource from pacemaker.
+   #. To run most test cases in health checks tab we need to manually create networks called ne04, net04_ext (external), and router router04 with gateway in net04_ext and interface in net04. Plugin will remove those networks and router during deploy because after deploy (before plugin start working) those networks are created with provider:network_type 'vlan' and its need to be 'opflex'.
+   #. We are able to add or remove controllers after deploy, to make this operation functional we cannot have during redeploy networks called net04 or net04_ext because during those operation default fuel try to change type for network from 'opflex' to 'vlan' and those operation cannot be done.
+   #. Updating core repos will trigger all puppet manifest run by plugin so during those operation we can't have networks called ne04/net04_ext and we need to remember that this operation could restart all services starter by plugin like agent_ovs.
 
 Installation Guide
 ==================
@@ -159,14 +162,6 @@ Verification that plugin was installed successful:
   #. Make sure that on all nodes agent_ovs service are running
   #. Check neutron logs to make sure there is no logs with error severity
 
-Limitations
-===========
-Know limitation of plugin:
-   #. To validate deploy openstack enviroment we are able to run health checks. During execution check called 'Check pacemaker status' we will see error: 'Resource clone_p_neutron-l3-agent allowed to start on the nodes [], but it is not started on any node' its expected because during deploy plugin remove those resource from pacemaker.
-   #. To run most tast cases in health checks tab we need to manualy create networks called ne04, net04_ext (external), and router router04 with gateway in net04_ext and intefrace in net04. Plugin remove those networks and router during deploy because after deploy (before plugin start working) those networks are created with provider:network_type 'vlan' and its need to be 'opflex'.
-   #. During redeploy process of opentsack enviroment we are able to remove/add primary controller, to make this operation funcional we cannot have during redeploy networks called net04 or net04_ext because during those operation default fuel try to change type for network from 'opflex' to 'vlan' and those operation cannot be done.
-
-
 Appendix
 ========
 
@@ -176,3 +171,4 @@ Links to external resources or documentation:
    #. `Cisco OpFlex Architectural Overview <http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Architectural_Overview.pdf>`_.
 
 
+succes 
