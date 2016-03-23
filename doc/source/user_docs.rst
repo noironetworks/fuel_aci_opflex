@@ -170,5 +170,3 @@ Links to external resources or documentation:
    #. `Cisco api ml2 driver docs <https://wiki.openstack.org/wiki/Neutron/Cisco-APIC-ML2-driver/>`_.
    #. `Cisco OpFlex Architectural Overview <http://www.cisco.com/c/en/us/td/docs/switches/datacenter/aci/apic/sw/1-x/openstack/b_ACI_with_OpenStack_OpFlex_Architectural_Overview.pdf>`_.
 
-
-succes 
