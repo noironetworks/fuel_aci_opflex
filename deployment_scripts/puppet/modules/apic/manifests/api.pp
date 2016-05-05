@@ -9,4 +9,9 @@ class apic::api (
         name   => $::apic::params::package_apic_api,
     }
 
+    package { 'apic_ml2_driver':
+        ensure => $package_ensure,
+        name   => $::apic::params::package_neutron_ml2_driver_apic,
+    }
+
 }

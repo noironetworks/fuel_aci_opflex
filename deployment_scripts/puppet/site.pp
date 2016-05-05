@@ -1,5 +1,5 @@
 
-$roles              = hiera('roles')
+$role               = hiera('role')
 $deployment_mode    = hiera('deployment_mode')
 $aci_opflex_hash    = hiera('aci_opflex',{})
 $access_hash        = hiera('access',{})
@@ -48,11 +48,11 @@ if ($aci_opflex_hash['driver_type'] == 'ML2') {
 case $install_type {
     'ML2', 'GBP': {
        class {"neutron::neutron_service_management":
-            roles                                    => $roles,
+            role                                     => $role,
        } 
        class {"cisco_aci::${class_name}":
             ha_prefix                                => $ha_prefix,
-            roles                                    => $roles,
+            role                                     => $role,
             admin_username                           => $access_hash['user'],
             admin_password                           => $access_hash['password'],
             admin_tenant                             => $access_hash['tenant'],
@@ -69,10 +69,6 @@ case $install_type {
             ext_net_port                             => $aci_opflex_hash['ext_net_port'],
             ext_net_subnet                           => $aci_opflex_hash['ext_net_subnet'],
             ext_net_gateway                          => $aci_opflex_hash['ext_net_gateway'],
-	    ext_net_neutron_subnet                   => $aci_opflex_hash['ext_net_neutron_subnet'],
-	    ext_net_neutron_gateway                  => $aci_opflex_hash['ext_net_neutron_gateway'],
-	    ext_net_encap		             => $aci_opflex_hash['ext_net_encap'],
-            ext_net_router_id                        => $aci_opflex_hash['ext_net_router_id'],
             db_connection                            => $db_connection,
             ext_net_config                           => $aci_opflex_hash['ext_net_enable'],
             pre_existing_vpc                         => $aci_opflex_hash['use_pre_existing_vpc'],
@@ -91,7 +87,12 @@ case $install_type {
             optimized_dhcp                           => $aci_opflex_hash['optimized_dhcp'],
             optimized_metadata                       => $aci_opflex_hash['optimized_metadata'],
        }
-       if "compute" in $roles {
+       if $role == "compute" {
+           service {'neutron-opflex-agent':
+              ensure => running,
+              enable => true,
+           }
+
            class {'neutron::compute_neutron_metadata':
                 debug          => $debug,
                 auth_region    => $auth_region,
@@ -101,13 +102,14 @@ case $install_type {
                 auth_password  => $neutron_user_password, 
                 shared_secret  => $neutron_metadata_proxy_secret,
                 metadata_ip    => $service_endpoint,
+                notify         => Service['neutron-opflex-agent'],
            }
        }
     }
     'US1': {
         class {'cisco_aci::generic_apic_ml2':
             ha_prefix                                => $ha_prefix,
-            roles                                    => $role2,
+            role                                     => $role,
             admin_username                           => $access_hash['user'],
             admin_password                           => $access_hash['password'],
             admin_tenant                             => $access_hash['tenant'],
@@ -124,10 +126,6 @@ case $install_type {
             ext_net_port                             => $aci_opflex_hash['ext_net_port'],
             ext_net_subnet                           => $aci_opflex_hash['ext_net_subnet'],
             ext_net_gateway                          => $aci_opflex_hash['ext_net_gateway'],
-            ext_net_neutron_subnet                   => $aci_opflex_hash['ext_net_neutron_subnet'],
-            ext_net_neutron_gateway                  => $aci_opflex_hash['ext_net_neutron_gateway'],
-            ext_net_encap                            => $aci_opflex_hash['ext_net_encap'],
-            ext_net_router_id                        => $aci_opflex_hash['ext_net_router_id'],
             db_connection                            => $db_connection,
             ext_net_config                           => $aci_opflex_hash['ext_net_enable'],
             pre_existing_vpc                         => $aci_opflex_hash['use_pre_existing_vpc'],
@@ -141,7 +139,7 @@ case $install_type {
     'US2b','US3': {
         class {"cisco_aci::${class_name}":
             ha_prefix                                => $ha_prefix,
-            roles                                    => $roles,
+            role                                     => $role,
             admin_username                           => $access_hash['user'],
             admin_password                           => $access_hash['password'],
             admin_tenant                             => $access_hash['tenant'],
@@ -158,10 +156,6 @@ case $install_type {
             ext_net_port                             => $aci_opflex_hash['ext_net_port'],
             ext_net_subnet                           => $aci_opflex_hash['ext_net_subnet'],
             ext_net_gateway                          => $aci_opflex_hash['ext_net_gateway'],
-            ext_net_neutron_subnet                   => $aci_opflex_hash['ext_net_neutron_subnet'],
-            ext_net_neutron_gateway                  => $aci_opflex_hash['ext_net_neutron_gateway'],
-            ext_net_encap                            => $aci_opflex_hash['ext_net_encap'],
-            ext_net_router_id                        => $aci_opflex_hash['ext_net_router_id'],
             db_connection                            => $db_connection,
             ext_net_config                           => $aci_opflex_hash['ext_net_enable'],
             pre_existing_vpc                         => $aci_opflex_hash['use_pre_existing_vpc'],
@@ -175,7 +169,7 @@ case $install_type {
     'US2a': {
         class {"cisco_aci::${class_name}":
             ha_prefix       => $ha_prefix,
-            roles           => $roles,
+            role            => $role,
             db_connection   => $db_connection,
         }
     }
@@ -183,4 +177,3 @@ case $install_type {
         fail("Wrong module ${module_name}")
     }
 }
-
