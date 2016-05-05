@@ -1,5 +1,5 @@
 
-$role               = hiera('role')
+$roles               = hiera('roles')
 $deployment_mode    = hiera('deployment_mode')
 $aci_opflex_hash    = hiera('aci_opflex',{})
 $access_hash        = hiera('access',{})
@@ -35,6 +35,16 @@ if has_key($aci_opflex_hash, 'opflex_encap_type') {
 $ha_prefix = $deployment_mode ? {
     'ha_compact'    => 'ha_',
     default         => '',
+}
+
+if member($roles, 'primary-controller') {
+   $role = "primary-controller"
+} elsif member($roles, 'controller') {
+   $role = "controller"
+} elsif member($roles, 'compute') {
+   $role = "compute"
+} else {
+   $role = hiera('role')
 }
 
 if ($aci_opflex_hash['driver_type'] == 'ML2') {

@@ -70,6 +70,7 @@ class neutron::config_apic (
         'ml2_cisco_apic/enable_aci_routing':                   value => 'True'; 
         'ml2_cisco_apic/enable_optimized_dhcp':                value => $optimized_dhcp;
         'ml2_cisco_apic/enable_optimized_metadata':            value => $optimized_metadata;
+        'ml2_cisco_apic/single_tenant_mode':                   value => 'False';
         "apic_external_network:${apic_ext_net}/preexisting":   value => $pre_existing_external_network_on;
         "apic_external_network:${apic_ext_net}/external_epg":  value => $external_epg;
         "apic_external_network:${apic_ext_net}/host_pool_cidr":  value => $snat_gateway_mask;
@@ -86,11 +87,13 @@ class neutron::config_apic (
     additional_configuration { $additional_config_options: }
     static_configuration { $static_config_options: }
 
-    if ($pre_existing_l3_context == true) {
-        neutron_plugin_ml2_cisco {
-            'ml2_cisco_apic/shared_context_name':  value => $shared_context_name;
-        }
-    }
+    # single_tenant_mode is false, hence this is commented out. In future plugin,
+    # single/multi tenant mode will be a GUI option, and at that time, this will be if'ed
+    #if ($pre_existing_l3_context == true) {
+    #    neutron_plugin_ml2_cisco {
+    #        'ml2_cisco_apic/shared_context_name':  value => $shared_context_name;
+    #    }
+    #}
 
     if ($ext_net_enable == true){
         neutron_plugin_ml2_cisco {

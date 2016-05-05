@@ -3,7 +3,7 @@
 # ['cinder', 'compute'] will be applied only on
 # cinder and compute nodes
 - role: ['primary-controller','controller','compute']
-  stage: post_deployment
+  stage: post_deployment/9100
   type: puppet
   parameters:
     puppet_manifest: puppet/site.pp

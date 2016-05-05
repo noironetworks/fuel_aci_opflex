@@ -111,15 +111,15 @@ attributes:
     value: true
     label: "Pre-existing shared l3context"
     description: "Use pre-existing shared l3context"
-  shared_context_name:
-    type: "text"
-    weight: 55
-    value: "ehnet_shared"
-    label: "Shared context name:"
-    description: "Specify a text-field with the name of this l3-context which will then used as shared_context_name"
-    restrictions:
-        - condition: "settings:aci_opflex.use_pre_existing_l3context.value == false"
-          action: hide
+#  shared_context_name:
+#    type: "text"
+#    weight: 55
+#    value: "ehnet_shared"
+#    label: "Shared context name:"
+#    description: "Specify a text-field with the name of this l3-context which will then used as shared_context_name"
+##    restrictions:
+#        - condition: "settings:aci_opflex.use_pre_existing_l3context.value == false"
+#          action: hide
   apic_system_id:
     type: "text"
     weight: 56

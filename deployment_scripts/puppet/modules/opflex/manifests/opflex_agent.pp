@@ -123,10 +123,15 @@ class opflex::opflex_agent (
            content => template('opflex/opflex-interface.erb'),
         }
     
+        exec {'remove_br_ex_patch_port':
+           command => '/usr/bin/ovs-vsctl del-port br-int int-br-floating',
+           onlyif  => "/usr/bin/ovs-vsctl list-ports br-int | grep -q int-br-floating",
+        }
+
         exec {'ifup_opflex_interface':
            command  => "/sbin/ifup p_opflex",
            unless   => "/sbin/ifconfig p_opflex",
-           require  => File['p_opflex_interface'],
+           require  => [Exec['remove_br_ex_patch_port'], File['p_opflex_interface']],
         }
     
         exec {'brctl_add_p_opflex':
