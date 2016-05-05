@@ -1,18 +1,10 @@
-Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
-  defaultfor :osfamily => :linux
-  commands   :iproute => 'ip',
-             :ifup    => 'ifup',
-             :ifdown  => 'ifdown'
+require File.join(File.dirname(__FILE__), '..','..','..','puppet/provider/l3_base')
 
-
-  def self.prefetch(resources)
-    interfaces = instances
-    resources.keys.each do |name|
-      if provider = interfaces.find{ |ii| ii.name == name }
-        resources[name].provider = provider
-      end
-    end
-  end
+Puppet::Type.type(:l3_ifconfig).provide(:lnx, :parent => Puppet::Provider::L3_base) do
+  defaultfor :kernel => :linux
+  commands   :ifup    => 'ifup',
+             :ifdown  => 'ifdown',
+             :arping  => 'arping'
 
   def self.instances
     insts = []
@@ -55,11 +47,15 @@ Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
     debug("DESTROY resource: #{@resource}")
     # todo: Destroing of L3 resource -- is a removing any IP addresses.
     #       DO NOT!!! put intedafce to Down state.
-    iproute('--force', 'addr', 'flush', 'dev', @resource[:interface])
+    self.class.addr_flush(@resource[:interface], true)
     @property_hash.clear
   end
 
+  attr_accessor(:property_flush)
+  attr_accessor(:property_hash)
+  attr_accessor(:old_property_hash)
   def initialize(value={})
+    #debug("INITIALIZE resource: #{value}")
     super(value)
     @property_flush = {}
     @old_property_hash = {}
@@ -74,7 +70,7 @@ Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
       if ! @property_flush[:ipaddr].nil?
         if @property_flush[:ipaddr].include?(:absent)
           # flush all ip addresses from interface
-          iproute('--force', 'addr', 'flush', 'dev', @resource[:interface])
+          self.class.addr_flush(@resource[:interface], true)
           #todo(sv): check for existing dhclient for this interface and kill it
         elsif (@property_flush[:ipaddr] & [:dhcp, 'dhcp', 'DHCP']).any?
           # start dhclient on interface the same way as at boot time
@@ -85,25 +81,44 @@ Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
           # add-remove static IP addresses
           if !@old_property_hash.nil? and !@old_property_hash[:ipaddr].nil?
             (@old_property_hash[:ipaddr] - @property_flush[:ipaddr]).each do |ipaddr|
-              iproute('--force', 'addr', 'del', ipaddr, 'dev', @resource[:interface])
+              debug(['--force', 'addr', 'del', ipaddr, 'dev', @resource[:interface]])
+              self.class.iproute(['--force', 'addr', 'del', ipaddr, 'dev', @resource[:interface]])
             end
             adding_addresses = @property_flush[:ipaddr] - @old_property_hash[:ipaddr]
           else
             adding_addresses = @property_flush[:ipaddr]
           end
           if adding_addresses.include? :none
-            iproute('--force', 'link', 'set', 'dev', @resource[:interface], 'up')
+            self.class.interface_up(@resource[:interface], true)
           elsif adding_addresses.include? :dhcp
             debug("!!! DHCP runtime configuration not implemented now !!!")
           else
             # add IP addresses
             adding_addresses.each do |ipaddr|
+              # Check whether IP address is already used
               begin
-                iproute('addr', 'add', ipaddr, 'dev', @resource[:interface])
-              rescue
-                rv = iproute('-o', 'addr', 'show', 'dev', @resource[:interface], 'to', "#{ipaddr.split('/')[0]}/32")
-                raise if ! rv.include? "inet #{ipaddr}"
+                arping(['-D', '-f', '-c 32', '-w 2', '-I', @resource[:interface], ipaddr.split('/')[0]])
+              rescue Exception => e
+                _errmsg = nil
+                e.message.split(/\n/).each do |line|
+                  line =~ /reply\s+from\s+(\d+\.\d+\.\d+\.\d+)/i
+                  if $1
+                    _errmsg = line
+                    break
+                  end
+                end
+                raise if _errmsg.nil?
+                warn("There is IP duplication for IP address #{ipaddr} on interface #{@resource[:interface]}!!!\n#{_errmsg}")
               end
+              # Set IP address
+              begin
+                self.class.iproute(['addr', 'add', ipaddr, 'dev', @resource[:interface]])
+              rescue
+                rv = self.class.iproute(['-o', 'addr', 'show', 'dev', @resource[:interface], 'to', "#{ipaddr.split('/')[0]}/32"])
+                raise if ! rv.join("\n").include? "inet #{ipaddr}"
+              end
+              # Send Gratuitous ARP to update all neighbours
+              arping(['-A', '-c 32', '-w 2', '-I', @resource[:interface], ipaddr.split('/')[0]])
             end
           end
         end
@@ -112,15 +127,15 @@ Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
       if !@property_flush[:gateway].nil? or !@property_flush[:gateway_metric].nil?
         # clean all default gateways for *THIS* interface (with any metrics)
         cmdline = ['route', 'del', 'default', 'dev', @resource[:interface]]
-        rc = 0
-        while rc == 0
+
+        while true
           # we should remove route repeatedly for prevent situation
           # when has multiple default routes through the same router,
           # but with different metrics
           begin
-            iproute(cmdline)
+            self.class.iproute(cmdline)
           rescue
-            rc = 1
+            break
           end
         end
 
@@ -136,11 +151,11 @@ Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
             cmdline << ['metric', @property_flush[:gateway_metric]]
           end
           begin
-            rv = iproute(cmdline)
+            self.class.iproute(cmdline)
           rescue
             warn("!!! Iproute can not setup new gateway.\n!!! May be default gateway with same metric already exists:")
-            rv = iproute('-f', 'inet', 'route', 'show')
-            warn("#{rv}\n\n")
+            rv = self.class.iproute(['-f', 'inet', 'route', 'show'])
+            warn("#{rv.join("\n")}\n\n")
           end
         end
       end
@@ -213,39 +228,5 @@ Puppet::Type.type(:l3_ifconfig).provide(:lnx) do
   end
 
   #-----------------------------------------------------------------
-
-  def self.get_if_addr_mappings
-    if_list = {}
-    ip_a = iproute('-f', 'inet', 'addr', 'show').split(/\n+/)
-    if_name = nil
-    ip_a.each do |line|
-      line.rstrip!
-      case line
-      when /^\s*\d+\:\s+([\w\-\.]+)[\:\@]/i
-        if_name = $1
-        if_list[if_name] = { :ipaddr => [] }
-      when /^\s+inet\s+(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})/
-        next if if_name.nil?
-        if_list[if_name][:ipaddr] << $1
-      else
-        next
-      end
-    end
-    return if_list
-  end
-
-  def self.get_if_defroutes_mappings
-    rou_list = {}
-    ip_a = iproute('-f', 'inet', 'route', 'show').split(/\n+/)
-    ip_a.each do |line|
-      line.rstrip!
-      next if !line.match(/^\s*default\s+via\s+([\d\.]+)\s+dev\s+([\w\-\.]+)(\s+metric\s+(\d+))?/)
-      metric = $4.nil?  ?  :absent  :  $4.to_i
-      rou_list[$2] = { :gateway => $1, :gateway_metric => metric } if rou_list[$2].nil?  # do not replace to gateway with highest metric
-    end
-    return rou_list
-  end
-
-
 end
 # vim: set ts=2 sw=2 et :

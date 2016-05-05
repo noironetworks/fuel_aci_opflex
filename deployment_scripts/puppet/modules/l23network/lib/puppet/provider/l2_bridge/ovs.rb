@@ -2,16 +2,14 @@ require File.join(File.dirname(__FILE__), '..','..','..','puppet/provider/ovs_ba
 
 Puppet::Type.type(:l2_bridge).provide(:ovs, :parent => Puppet::Provider::Ovs_base) do
   commands   :vsctl       => 'ovs-vsctl',
-             :ethtool_cmd => 'ethtool',
-             :brctl       => 'brctl',
-             :iproute     => 'ip'
+             :ethtool_cmd => 'ethtool'
 
   def self.skip_port_for?(port_props)
     port_props[:br_type] != 'ovs'
   end
 
   def self.get_instances(big_hash)
-    big_hash[:bridge]
+    big_hash.fetch(:bridge, {})
   end
 
   # def self.instances
@@ -27,12 +25,12 @@ Puppet::Type.type(:l2_bridge).provide(:ovs, :parent => Puppet::Provider::Ovs_bas
     @property_flush = {}.merge! @resource
     #
     vsctl('add-br', @resource[:bridge])
-    iproute('link', 'set', 'up', 'dev', @resource[:bridge])
+    self.class.interface_up(@resource[:bridge])
     notice("bridge '#{@resource[:bridge]}' created.")
   end
 
   def destroy
-    iproute('link', 'set', 'down', 'dev', @resource[:bridge])
+    self.class.interface_down(@resource[:bridge])
     vsctl("del-br", @resource[:bridge])
   end
 

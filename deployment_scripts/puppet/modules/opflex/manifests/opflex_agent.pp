@@ -1,5 +1,5 @@
 class opflex::opflex_agent (
-     $roles = ['compute'],
+     $role = 'compute',
      $ha_prefix = '',
      $opflex_log_level = 'debug2',
      $opflex_peer_ip = '10.0.0.30',
@@ -53,6 +53,13 @@ class opflex::opflex_agent (
     $macaddr = inline_template("<%= scope.lookupvar(@xxstr) %>")
     $dstr = "interface \"$opflex_uplink_iface.$opflex_uplink_vlan\" {send host-name \"$::fqdn\"; send dhcp-client-identifier 01:$macaddr; }"
  
+    if $role == "compute" {
+       exec {'dummy_ini':
+          command => "/usr/bin/touch /etc/neutron/plugin.ini",
+          require => Package['neutron-opflex-agent'],
+       }
+    }
+
     package { 'neutron-opflex-agent':
         ensure  => 'present',
         name    => $::opflex::params::package_neutron_opflex,
@@ -62,7 +69,31 @@ class opflex::opflex_agent (
         ensure  => 'present',
         name    => $::opflex::params::package_agent_ovs,
     }
-    
+
+#   case $role {
+#        /controller/: {
+#    exec {'disable_openvswitch_plugin':
+#       command  => "/usr/sbin/pcs resource clone_disable p_neutron-plugin-openvswitch-agent",
+#       onlyif => "/usr/sbin/pcs resource show | grep -q clone_p_neutron-plugin-openvswitch-agent",
+#    }
+#    exec {'delete_openvswitch_plugin':
+#       command  => "/usr/sbin/pcs resource delete clone_p_neutron-plugin-openvswitch-agent",
+#       onlyif => "/usr/sbin/pcs resource show | grep -q clone_p_neutron-plugin-openvswitch-agent",
+#       require => Exec['disable_openvswitch_plugin'],
+#    }
+#
+#    exec {'disable_l3_agent':
+#       command  => "/usr/sbin/pcs resource disable clone_p_neutron-l3-agent",
+#       onlyif => "/usr/sbin/pcs resource show | grep -q clone_p_neutron-l3-agent",
+#    }
+#    exec {'delete_l3_agent':
+#       command  => "/usr/sbin/pcs resource delete clone_p_neutron-l3-agent",
+#       onlyif => "/usr/sbin/pcs resource show | grep -q clone_p_neutron-l3-agent",
+#       require => Exec['disable_l3_agent'],
+#    }
+#    }
+#    }
+  
     if ($opflex_encap_type == "vxlan") {
         $opflex_encap_iface = 'br-int_vxlan0'
         file {'agent-conf':
@@ -85,12 +116,6 @@ class opflex::opflex_agent (
        ensure => running,
        enable => true,
        require => File['agent-conf'],
-    }
-
-    file {'ovs_initd':
-        ensure => 'present',
-        path   => '/etc/init/agent-ovs.override',
-        source => 'puppet:///modules/cisco_aci/agent-ovs.override'
     }
 
     if ($opflex_encap_type == "vxlan") {
@@ -129,22 +154,32 @@ class opflex::opflex_agent (
            content => template('opflex/opflex-interface.erb'),
         }
     
+        exec {'remove_br_ex_patch_port':
+           command => '/usr/bin/ovs-vsctl del-port br-int int-br-floating',
+           onlyif  => "/usr/bin/ovs-vsctl list-ports br-int | grep -q int-br-floating",
+        }
+
         exec {'ifup_opflex_interface':
            command  => "/sbin/ifup p_opflex",
            unless   => "/sbin/ifconfig p_opflex",
-           require  => File['p_opflex_interface'],
+           require  => [Exec['remove_br_ex_patch_port'], File['p_opflex_interface']],
         }
-    
+
         exec {'brctl_add_p_opflex':
            command => "/sbin/brctl addif ${br_to_patch} p_opflex",
            unless  => '/sbin/brctl show ${br_to_patch} | /bin/grep -q p_opflex',
            require => Exec['ifup_opflex_interface', 'persist_p_opflex'],
         }
-    
+   
         exec {'persist_p_opflex':
            command => "/bin/sed -i '/^bridge_ports.*$/  s/$/ p_opflex/' /etc/network/interfaces.d/ifcfg-${br_to_patch}",
            unless  => '/bin/grep -q p_opflex /etc/network/interfaces.d/ifcfg-${br_to_patch}',
         }
     }
+
+   exec {'fix_bridge_openflow_version':
+      command => "/usr/bin/ovs-vsctl set bridge $opflex_ovs_bridge_name protocols=[]",
+      returns => [0,1,2],
+   }
 
 }

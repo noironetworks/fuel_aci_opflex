@@ -1,0 +1,3 @@
+#!/bin/bash
+SCRIPT="/etc/sysconfig/network-scripts/interface-up-script-$1"
+[ -x $SCRIPT ] && . $SCRIPT

@@ -1,19 +1,7 @@
-require 'puppetx/l23_utils'
 require 'puppetx/l23_ethtool_name_commands_mapping'
-require 'yaml'
+require File.join(File.dirname(__FILE__), 'interface_toolset')
 
-class Puppet::Provider::L2_base < Puppet::Provider
-
-  def self.ovs_vsctl(*cmd)
-    actual_cmd = ['ovs-vsctl'] + Array(*cmd)
-    begin
-      ff = IO.popen(actual_cmd.join(' '))
-      rv = ff.readlines().map{|l| l.chomp()}
-    rescue
-      rv = nil
-    end
-    return rv
-  end
+class Puppet::Provider::L2_base < Puppet::Provider::InterfaceToolset
 
   def self.prefetch(resources)
     interfaces = instances
@@ -25,10 +13,6 @@ class Puppet::Provider::L2_base < Puppet::Provider
   end
 
   # ---------------------------------------------------------------------------
-
-  def self.iface_exist?(iface)
-    File.exist? "/sys/class/net/#{iface}"
-  end
 
   def self.get_lnx_vlan_interfaces
     # returns hash, that contains ports (interfaces) configuration.
@@ -72,15 +56,21 @@ class Puppet::Provider::L2_base < Puppet::Provider
     interfaces.each do |if_dir|
       if_name = if_dir.split('/')[-1]
       port[if_name] = {
-        :name      => if_name,
-        :port_type => [],
-        :onboot    => self.get_iface_state(if_name),
-        :ethtool   => nil,
-        :mtu       => File.open("#{if_dir}/mtu").read.chomp.to_i,
-        :provider  => (if_name == 'ovs-system')  ?  'ovs'  :  'lnx' ,
+        :name         => if_name,
+        :port_type    => [],
+        :onboot       => self.get_iface_state(if_name),
+        :ethtool      => nil,
+        :peer_ifindex => nil,
+        :ifindex      => File.open("#{if_dir}/ifindex").read.chomp.to_i,
+        :mtu          => File.open("#{if_dir}/mtu").read.chomp.to_i,
+        :provider     => (if_name == 'ovs-system')  ?  'ovs'  :  'lnx' ,
       }
       # determine port_type for this iface
-      if File.directory? "#{if_dir}/bonding"
+      peer_ifindex = self.get_iface_peer_index(if_name)
+      if !peer_ifindex.nil?
+        port[if_name][:port_type] << 'jack' << 'unremovable'
+        port[if_name][:peer_ifindex] = peer_ifindex
+      elsif File.directory? "#{if_dir}/bonding"
         # This interface is a baster of bond, get bonding properties
         port[if_name][:slaves] = File.open("#{if_dir}/bonding/slaves").read.chomp.strip.split(/\s+/).sort
         port[if_name][:port_type] << 'bond' << 'unremovable'
@@ -381,7 +371,7 @@ class Puppet::Provider::L2_base < Puppet::Provider
     re_c = /([\w\-]+)\s+\d+/
     begin
       # todo(sv): using port_list instead fork subprocess
-      brctl('show').split(/\n+/).select{|l| l.match(re_c)}.collect{|a| $1 if a.match(re_c)}.each do |br_name|
+      self.brctl(['show']).select{|l| l.match(re_c)}.collect{|a| $1 if a.match(re_c)}.each do |br_name|
         br_name.strip!
         bridges[br_name] = {
           :stp     => (File.open("/sys/class/net/#{br_name}/bridge/stp_state").read.strip.to_i == 1),
@@ -437,7 +427,7 @@ class Puppet::Provider::L2_base < Puppet::Provider
     # (lnx and ovs (with type internal)) included to the lnx bridge
     #
     begin
-      brctl_show = brctl('show').split(/\n+/).select{|l| l.match(/^[\w\-]+\s+\d+/) or l.match(/^\s+[\w\.\-]+/)}
+      brctl_show = self.brctl(['show']).split(/\n+/).select{|l| l.match(/^[\w\-]+\s+\d+/) or l.match(/^\s+[\w\.\-]+/)}
     rescue
       debug("No LNX bridges found, because error while 'brctl show' execution")
       return {}
@@ -583,20 +573,6 @@ class Puppet::Provider::L2_base < Puppet::Provider
     self.ovs_bond_allowed_properties.keys.sort
   end
 
-
-  def self.get_iface_state(iface)
-    # returns:
-    #    true  -- interface in UP state
-    #    false -- interface in UP state, but no-carrier
-    #    nil   -- interface in DOWN state
-    begin
-      1 == File.open("/sys/class/net/#{iface}/carrier").read.chomp.to_i
-    rescue
-      # if interface is down, this file can't be read
-      nil
-    end
-  end
-
   # ---------------------------------------------------------------------------
 
   def self.get_ethtool_name_commands_mapping
@@ -617,14 +593,6 @@ class Puppet::Provider::L2_base < Puppet::Provider
 
   # ---------------------------------------------------------------------------
 
-  def self.set_mtu(iface, mtu=1500)
-    if File.symlink?("/sys/class/net/#{iface}")
-      debug("Set MTU to '#{mtu}' for interface '#{iface}'")
-      File.open("/sys/class/net/#{iface}/mtu", "a") { |f| f.write(mtu) }
-    end
-  end
-
 end
-
 
 # vim: set ts=2 sw=2 et :

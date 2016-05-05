@@ -16,8 +16,8 @@ attributes:
         label: "ML2"
         description: "ML2 Driver"
       - data: "GBP"
-        label: "Group Based Policy - beta"
-        description: "Group Based Policy Driver - beta"
+        label: "Group Based Policy"
+        description: "Group Based Policy Driver"
   apic_hosts:
     value: '10.0.0.100'
     label: 'APIC Host'
@@ -105,48 +105,48 @@ attributes:
     value: true
     label: "Use pre-existing VPC links"
     description: "Use pre-existing VPC configuration as configured in APIC"
-  use_pre_existing_l3context:
+  single_tenant_mode:
     type: "checkbox"
     weight: 54
-    value: true
-    label: "Pre-existing shared l3context"
-    description: "Use pre-existing shared l3context"
+    label: "Single Tenant Mode"
+    description: "Openstack Projects mapped to single APIC tenant"
+    value: false
   shared_context_name:
     type: "text"
-    weight: 55
-    value: "ehnet_shared"
+    weight: 56
+    value: ""
     label: "Shared context name:"
     description: "Specify a text-field with the name of this l3-context which will then used as shared_context_name"
     restrictions:
-        - condition: "settings:aci_opflex.use_pre_existing_l3context.value == false"
+        - condition: "settings:aci_opflex.single_tenant_mode.value == false"
           action: hide
   apic_system_id:
     type: "text"
-    weight: 56
+    weight: 57
     value: "openstack1"
     label: "OpenStack system ID:"
     description: "OpenStack ID to be used by APIC"
   pre_existing_external_network_on:
     type: "checkbox"
-    weight: 57
-    value: true
+    weight: 58
+    value: false
     label: "Use pre-existing external network"
     description: "Use pre-existing external neutron network configured on APIC side"
     restrictions:
         - condition: "settings:aci_opflex.ext_net_enable.value == true"
-          action: hide
+          action: disable
   apic_external_network:
     type: "text"
-    weight: 58
+    weight: 59
     value: "my_ext_net"
     label: "APIC external network:"
     description: "External network name, which will be used by APIC"
     restrictions:
         - condition: "settings:aci_opflex.ext_net_enable.value == true"
-          action: hide
+          action: disable
   external_epg:
     type: "text"
-    weight: 59
+    weight: 60
     value: "ext_epg"
     label: "External EPG name:"
     description: "APIC external EPG name"
@@ -204,45 +204,9 @@ attributes:
     restrictions:
         - condition: "settings:aci_opflex.ext_net_enable.value == false"
           action: hide
-  ext_net_router_id:
-    type: "text"
-    weight: 76
-    value: "1.0.0.2"
-    label: "Router ID:"
-    description: "Router ID from Cisco APIC"
-    restrictions:
-        - condition: "settings:aci_opflex.ext_net_enable.value == false"
-          action: hide
-  ext_net_encap:
-    type: "text"
-    weight: 76
-    value: "vlan-1031"
-    label: "Enacp vlan ID:"
-    description: "Vlan encapsulation ID for Cisco APIC. Example: vlan-1031"
-    restrictions:
-        - condition: "settings:aci_opflex.ext_net_enable.value == false"
-          action: hidea
-  ext_net_neutron_subnet:
-    type: "text"
-    weight: 77
-    value: "10.0.0.0/24"
-    label: "Neutron external subnet range:"
-    description: "CIDR for neutron external network"
-    restrictions:
-        - condition: "settings:aci_opflex.ext_net_enable.value == false"
-          action: hide
-  ext_net_neutron_gateway:
-    type: "text"
-    weight: 78
-    value: "10.0.0.1"
-    label: "Neutron external Gateway IP:"
-    description: "IP address of the neutron external gateway"
-    restrictions:
-        - condition: "settings:aci_opflex.ext_net_enable.value == false"
-          action: hide
   snat_gateway_mask:
     type: "text"
-    weight: 79
+    weight: 76
     value: '1.1.1.1/24'
     label: "SNAT Gateway/Mask:"
     description: "SNAT gateway and number of mask bits"
@@ -251,17 +215,17 @@ attributes:
       error: "Invalid Gateway / Mask bits"
   optimized_dhcp:
     type: "checkbox"
-    weight: 80
+    weight: 77
     value: true
     label: "Enable Optimized DHCP"
   optimized_metadata:
     type: "checkbox"
-    weight: 81
+    weight: 78
     value: true
     label: "Enable Optimized Metadata"
   additional_config:
     type: "textarea"
-    weight: 82
+    weight: 79
     value: ""
     label: "Additional config"
     description: "Example:\nml2_cisco_apic/apic_vpc_pairs=201:202,203:204"

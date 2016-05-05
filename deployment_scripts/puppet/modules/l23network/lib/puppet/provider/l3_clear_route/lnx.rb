@@ -1,8 +1,7 @@
-require File.join(File.dirname(__FILE__), '..','..','..','puppet/provider/lnx_base')
+require File.join(File.dirname(__FILE__), '..','..','..','puppet/provider/l3_base')
 
-Puppet::Type.type(:l3_clear_route).provide(:lnx) do
-  defaultfor :osfamily   => :linux
-  commands   :ip         => 'ip'
+Puppet::Type.type(:l3_clear_route).provide(:lnx, :parent => Puppet::Provider::L3_base) do
+  defaultfor :kernel   => :linux
 
   def self.prefetch(resources)
     instances.each do |provider|
@@ -43,6 +42,7 @@ Puppet::Type.type(:l3_clear_route).provide(:lnx) do
         route_type = nil
       end
       rv << {
+        :interface      => iface,
         :destination    => dest,
         :metric         => metric.to_i,
         :gateway        => gateway,
@@ -81,17 +81,52 @@ Puppet::Type.type(:l3_clear_route).provide(:lnx) do
     cmd = [ '--force', 'route', 'delete', @property_hash[:destination] ]
     cmd += [ 'via', @property_hash[:gateway] ]
     cmd += [ 'metric', @property_hash[:metric] ] if @property_hash[:metric]
-    ip cmd
+    cmd += [ 'dev', @property_hash[:interface] ] if @property_hash[:interface]
+    # Sometimes l3_clear_route deletes old default route but at this moment
+    # ubuntu hotplug has already changed(deleted and added new correct) it
+    begin
+      self.class.iproute(cmd)
+    rescue Exception => error
+      errmsg = nil
+      error.message.split(/\n/).each do |line|
+        if line =~ /RTNETLINK\s+answers\:\s+No\s+such\s+process/i
+          errmsg = line
+          break
+        end
+      end
+      raise if errmsg.nil?
+      metricmsg =  ( @property_hash[:metric]  ?  "metric #{@property_hash[:metric]} "  :  '' )
+      warn("The route #{@property_hash[:destination]} #{metricmsg}via #{@property_hash[:interface]} is already removed! \n#{errmsg}")
+    end
   end
 
   def destroy
     debug "Call: destroy"
+    debug "Call: destroy: going to work with"
+    debug "Call: destroy: dst: #{@resource[:destination]}"
+    debug "Call: destroy: metric: #{@resource[:metric]}"
+    debug "Call: destroy: gateway: #{@resource[:gateway]}"
+    debug "Call: destroy: interface: #{@resource[:interface]}"
     self.class.instances.each do |provider|
-      # we remove only routes with the same destination and metric as described one
-      next unless provider.destination == @resource[:destination] and provider.metric == @resource[:metric]
+     # we remove only routes with the same destination and metric as described one
+      next unless provider.destination.to_s == @resource[:destination].to_s and provider.metric.to_s == @resource[:metric].to_s
       # we do not remove routes that have the same gateway as described one
-      next if provider.gateway == @resource[:gateway]
+      next if provider.gateway.to_s == @resource[:gateway].to_s and provider.interface.to_s == @resource[:interface].to_s
       # other providers should remove their routes
+      debug "Call: destroy: LOOP OF PROVIDER"
+      debug "Call: destroy: loop_dst: #{provider.destination}"
+      debug "Call: destroy: loop_metric: #{provider.metric}"
+      debug "Call: destroy: loop_gateway: #{provider.gateway}"
+      debug "Call: destroy: loop_interface: #{provider.interface}"
+      [:destination,:metric,:gateway,:interface].each do |elem|
+        a=provider.send(elem).to_s
+        b=@resource[elem].to_s
+        if a != b
+         debug "Call: destroy: #{elem} is not equal"
+         debug "Call: destroy: prefetched value is \"#{a}\""
+         debug "Call: destroy: provided value is \"#{b}\""
+        end
+      end
       provider.route_delete
     end
   end
@@ -126,5 +161,12 @@ Puppet::Type.type(:l3_clear_route).provide(:lnx) do
     @property_flush[:gateway] = val
   end
 
+  def interface
+    @property_hash[:interface]
+  end
+
+  def interface=(val)
+    @property_flush[:interface] = val
+  end
 end
 # vim: set ts=2 sw=2 et :

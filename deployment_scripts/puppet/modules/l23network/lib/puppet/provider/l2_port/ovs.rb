@@ -2,9 +2,7 @@ require File.join(File.dirname(__FILE__), '..','..','..','puppet/provider/ovs_ba
 
 Puppet::Type.type(:l2_port).provide(:ovs, :parent => Puppet::Provider::Ovs_base) do
   commands   :vsctl       => 'ovs-vsctl',
-             :ethtool_cmd => 'ethtool',
-             :iproute     => 'ip'
-
+             :ethtool_cmd => 'ethtool'
 
   def self.add_unremovable_flag(port_props)
     # calculate 'unremovable' flag. Should be re-defined in chield providers
@@ -14,7 +12,7 @@ Puppet::Type.type(:l2_port).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
   end
 
   def self.get_instances(big_hash)
-    big_hash[:port]
+    big_hash.fetch(:port, {})
   end
 
   #-----------------------------------------------------------------
@@ -24,7 +22,7 @@ Puppet::Type.type(:l2_port).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
     @old_property_hash = {}
     @property_flush = {}.merge! @resource
     #
-    cmd = ["add-port", @resource[:bridge], @resource[:interface]]
+    cmd = ['--may-exist', 'add-port', @resource[:bridge], @resource[:interface]]
     # # tag and trunks for port
     # port_properties = @resource[:port_properties]
     # if ![nil, :absent].include? @resource[:vlan_id] and @resource[:vlan_id] > 0
@@ -45,6 +43,8 @@ Puppet::Type.type(:l2_port).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
       tt = "type=" + @resource[:type].to_s
     elsif File.exist? "/sys/class/net/#{@resource[:interface]}"
       tt = nil
+      # Flush all routes for this interface
+      self.class.addr_flush(@resource[:interface])
     else
       tt = "type=internal"
     end
@@ -82,7 +82,7 @@ Puppet::Type.type(:l2_port).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
           vsctl('set', 'Port', @resource[:interface], "tag=#{@property_flush[:vlan_id].to_i}")
         else
           # remove 802.1q tag
-          vsctl('set', 'Port', @resource[:interface], "tag='[]'")
+          vsctl('set', 'Port', @resource[:interface], "tag=[]")
         end
       end
       @property_hash = resource.to_hash

@@ -49,22 +49,6 @@ class neutron::services::agents (
         tag        => 'neutron_agents'
     }
 
-    service {'neutron-opflex-agent':
-        ensure     => 'running',
-        name       => 'neutron-opflex-agent',
-        enable     => true,
-        hasstatus  => true,
-        hasrestart => false,
-    }
-
-    service {'agent-ovs':
-        ensure     => 'running',
-        name       => 'agent-ovs',
-        enable     => true,
-        hasstatus  => true,
-        hasrestart => false,
-    }
-
     Neutron_config<||>              ~> Service<| tag == 'neutron_agents' |>
     Neutron_plugin_ml2<||>          ~> Service<| tag == 'neutron_agents' |>
     Neutron_plugin_ml2_cisco<||>    ~> Service<| tag == 'neutron_agents' |>

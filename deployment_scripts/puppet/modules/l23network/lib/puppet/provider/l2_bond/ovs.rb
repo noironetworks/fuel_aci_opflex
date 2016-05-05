@@ -2,8 +2,7 @@ require File.join(File.dirname(__FILE__), '..','..','..','puppet/provider/ovs_ba
 
 Puppet::Type.type(:l2_bond).provide(:ovs, :parent => Puppet::Provider::Ovs_base) do
   commands  :vsctl       => 'ovs-vsctl',
-            :ethtool_cmd => 'ethtool',
-            :iproute     => 'ip'
+            :ethtool_cmd => 'ethtool'
 
 
   # def self.add_unremovable_flag(port_props)
@@ -15,7 +14,7 @@ Puppet::Type.type(:l2_bond).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
 
   def self.get_instances(big_hash)
     # didn't use .select{...} here for backward compatibility with ruby 1.8
-    big_hash[:port].reject{|k,v| !v[:port_type].include?('bond')}
+    big_hash.fetch(:port, {}).reject{|k,v| !v[:port_type].include?('bond')}
   end
 
   #-----------------------------------------------------------------
@@ -24,10 +23,13 @@ Puppet::Type.type(:l2_bond).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
     debug("CREATE resource: #{@resource}")
     @old_property_hash = {}
     @property_flush = {}.merge! @resource
-    #
-    cmd = ["add-bond", @resource[:bridge], @resource[:bond], @resource[:interface]]
+
+    @resource[:slaves].each do |slave|
+      self.class.addr_flush(slave)
+    end
+
     begin
-      vsctl(cmd)
+      vsctl('--may-exist', 'add-bond', @resource[:bridge], @resource[:bond], @resource[:slaves])
     rescue Puppet::ExecutionFailure => error
       raise Puppet::ExecutionFailure, "Can't add bond '#{@resource[:bond]}'\n#{error}"
     end
@@ -44,7 +46,7 @@ Puppet::Type.type(:l2_bond).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
   end
 
   def destroy
-    vsctl("del-port", @resource[:bridge], @resource[:interface])
+    vsctl('del-port', @resource[:bridge], @resource[:bond])
   end
 
   def flush
@@ -68,22 +70,21 @@ Puppet::Type.type(:l2_bond).provide(:ovs, :parent => Puppet::Provider::Ovs_base)
             act_val = val.to_s
           else
             warn("Unsupported property '#{prop}' for bond '#{@resource[:bond]}'")
-            act_val = nil
+            next
           end
-          if act_val
-            debug("Set property '#{prop}' to '#{act_val}' for bond '#{@resource[:bond]}'")
-            if allowed_properties[prop.to_sym][:property]
-              # just setup property in OVSDB
-              if allowed_properties[prop.to_sym][:allow] and ! allowed_properties[prop.to_sym][:allow].include? val
-                warn("Unsupported value '#{val}' for property '#{prop}' for bond '#{@resource[:bond]}'.\nAllowed modes: #{allowed_properties[prop.to_sym][:allow]}")
-                val = nil
-              end
-              if allowed_properties[prop.to_sym][:override_integer]
-                # override property if it should be given as string for ovs and as integer for native linux
-                val = allowed_properties[prop.to_sym][:override_integer][val.to_i] || allowed_properties[prop.to_sym][:override_integer][0]
-              end
-              vsctl('--', "set", "Port", @resource[:bond], "#{allowed_properties[prop.to_sym][:property]}=#{val}") if ! val.nil?
+          next if ['','none', 'undef', 'absent', 'nil'].include? act_val
+          debug("Set property '#{prop}' to '#{act_val}' for bond '#{@resource[:bond]}'")
+          if allowed_properties[prop.to_sym][:property]
+            # just setup property in OVSDB
+            if allowed_properties[prop.to_sym][:allow] and ! allowed_properties[prop.to_sym][:allow].include? val
+              warn("Unsupported value '#{val}' for property '#{prop}' for bond '#{@resource[:bond]}'.\nAllowed modes: #{allowed_properties[prop.to_sym][:allow]}")
+              val = nil
             end
+            if allowed_properties[prop.to_sym][:override_integer]
+              # override property if it should be given as string for ovs and as integer for native linux
+              val = allowed_properties[prop.to_sym][:override_integer][val.to_i] || allowed_properties[prop.to_sym][:override_integer][0]
+            end
+            vsctl('--', 'set', 'Port', @resource[:bond], "#{allowed_properties[prop.to_sym][:property]}=#{val}") if ! val.nil?
           end
         end
       end

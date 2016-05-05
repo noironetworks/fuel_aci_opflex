@@ -22,10 +22,6 @@ class cisco_aci::gbp_and_apic_gbp (
     $ext_net_port                       = '1/1',
     $ext_net_subnet                     = '10.0.0.0/24',
     $ext_net_gateway                    = '10.0.0.1',
-    $ext_net_neutron_subnet             = '10.0.0.0/24',
-    $ext_net_neutron_gateway            = '10.0.0.1',
-    $ext_net_encap                      = '',
-    $ext_net_router_id                  = '',
     $management_vip                     = '',
     $db_connection                      = '',
     $pre_existing_vpc                   = true,
@@ -65,8 +61,8 @@ class cisco_aci::gbp_and_apic_gbp (
                 class {'neutron::network':
                     tenant_name     => $admin_tenant,
                     ext_net_name    => $ext_net_name,
-                    ext_net_subnet  => $ext_net_neutron_subnet,
-                    ext_net_gateway => $ext_net_neutron_gateway,
+                    ext_net_subnet  => $ext_net_subnet,
+                    ext_net_gateway => $ext_net_gateway,
                 }
             }
         }
@@ -107,8 +103,6 @@ class cisco_aci::gbp_and_apic_gbp (
         ext_net_subnet                     => $ext_net_subnet,
         ext_net_gateway                    => $ext_net_gateway,
         ext_net_config                     => $ext_net_config,
-        ext_net_encap                      => $ext_net_encap,
-        ext_net_router_id                  => $ext_net_router_id,
         pre_existing_vpc                   => $pre_existing_vpc,
         pre_existing_l3_context            => $pre_existing_l3_context,
         shared_context_name                => $shared_context_name,

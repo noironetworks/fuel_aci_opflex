@@ -9,6 +9,19 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     '/etc/network/interfaces.d'
   end
 
+  def self.target_files(script_dir = nil)
+    provider = self.name
+    debug("Collecting target files for #{provider}")
+    entries = super
+    regoc_regex = %r{ovs_type}
+    if provider =~ /ovs_/
+      entries.select! { |entry| !open(entry).grep(regoc_regex).empty? }
+    elsif provider =~ /lnx_/
+      entries.select! { |entry| open(entry).grep(regoc_regex).empty? }
+    end
+    entries
+  end
+
   def self.property_mappings
     {
       :if_type               => 'if_type',       # pseudo field, not found in config, but calculated
@@ -29,7 +42,11 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
       :bond_slaves           => 'bond-slaves',
       :bond_mode             => 'bond-mode',
       :bond_miimon           => 'bond-miimon',
+      :bond_lacp             => '', # unused for lnx
       :bond_lacp_rate        => 'bond-lacp-rate',
+      :bond_updelay          => 'bond-updelay',
+      :bond_downdelay        => 'bond-downdelay',
+      :bond_ad_select        => 'bond-ad-select',
       :bond_xmit_hash_policy => 'bond-xmit-hash-policy'
     }
   end
@@ -51,15 +68,35 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
           :detect_re    => /(post-)?up\s+ethtool\s+(-\w+)\s+([\w\-]+)\s+(\w+)\s+(\w+)/,
           :detect_shift => 2,
       },
+      :ipaddr_aliases => {
+          # ip addr add 192.168.1.43/24 dev $IFACE
+          :detect_re    => /(post-)?up\s+ip\s+a([dr]+)?\s+add\s+(\d+\.\d+\.\d+\.\d+\/\d+)\s+dev\s+([\w\-]+)/,
+          :detect_shift => 3,
+      },
       :delay_while_up  => {
           # post-up sleep 10
           :detect_re    => /(post-)?up\s+sleep\s+(\d+)/,
           :detect_shift => 2,
       },
+      :jacks  => {
+          # pre-up ip link add p_33470efd-0 type veth peer name p_33470efd-1
+          :detect_re    => /pre-up\s+ip\s+link\s+add\s+([\w\-]+)\s+mtu\s+(\d+)\s+type\s+veth\s+peer\s+name\s+([\w\-]+)+mtu\s+(\d+)/,
+          :detect_shift => 1,
+      },
     }
   end
   def collected_properties
     self.class.collected_properties
+  end
+
+  # Some properties can be defined as repeatable key=value string part in the
+  # one option in config file these properties should be fetched by RE-scanning
+  #
+  def self.oneline_properties
+    { }
+  end
+  def oneline_properties
+    self.class.oneline_properties
   end
 
   # In the interface config files those fields should be written as boolean
@@ -135,18 +172,30 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
         val = m[2].strip
         case key
           # Ubuntu has non-linear config format. Some options should be calculated evristically
-          when /(auto|allow-\S)/
+          when /auto/
               ooper = $1
               if ! hash.has_key?('iface')
                 # setup iface name if it not given in iface directive
                 mm = val.split(/\s+/)
                 hash['iface'] = mm[0]
               end
-              if ooper =~ /allow-(\S)/
-                hash['if_provider'] = "ovs:#{$1}:#{val}"
-              else
-                hash['auto'] = true
-                hash['if_provider'] ||= "lnx"
+              hash['auto'] = true
+              hash['if_provider'] ||= "lnx"
+          when /allow-(\S+)/
+              if $1 == 'ovs'
+                hash['if_provider'] = "ovs"
+                hash['if_type'] = "bridge"
+              end
+              if ! hash.has_key?('iface')
+                # setup iface name if it not given in iface directive
+                mm = val.split(/\s+/)
+                hash['iface'] = mm[0]
+              end
+          when /(ovs_\S)/
+              hash['if_provider'] = "ovs" if ! (hash['if_provider'] =~ /ovs/)
+              hash[key] = val
+              if key == 'ovs_bonds'
+                hash['if_type'] = 'bond'
               end
           when /iface/
               mm = val.split(/\s+/)
@@ -156,14 +205,17 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
               #   # todo(sv): Make more powerful methodology for recognizind Bridges.
               #   hash['if_type'] = :bridge
               # end
-          when /bridge-ports/
+          when /bridge[-_]ports/
               hash['if_type'] = :bridge
               hash[key] = val
-          when /bond-(slaves|mode)/
+          when /bond[-_](slaves|mode)/
               hash['if_type'] = :bond
               hash[key] = val
           else
               hash[key] = val
+        end
+        if val =~ /\s+type\s+veth\s+/
+              hash['if_type'] = :patch
         end
       else
         raise Puppet::Error, %{#{filename} is malformed; "#{line}" did not match "#{pair_regex.to_s}"}
@@ -174,8 +226,16 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     hash['iface'] ||= dirty_iface_name
 
     props = self.mangle_properties(hash)
-    props.merge!({:family => :inet})
 
+    # scan for one-line properties set
+    props.reject{|x| !oneline_properties.keys.include?(x)}.each do |key, line|
+      _k = Regexp.quote(oneline_properties[key][:field])
+      line =~ /#{_k}=(\S+)/
+      val = $1
+      props[key] = val
+    end
+
+    props.merge!({:family => :inet})
     # collect properties, defined as repeatable strings
     collected=[]
     lines.each do |line|
@@ -196,6 +256,7 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
       props[prop_name] = rv if ! ['', 'absent'].include? rv.to_s.downcase
     end
 
+    props.merge!({:provider => self.name})
 
     # The FileMapper mixin expects an array of providers, so we return the
     # single interface wrapped in an array
@@ -210,7 +271,6 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
 
   def self.mangle_properties(pairs)
     props = {}
-
     # Unquote all values
     pairs.each_pair do |key, val|
       next if ! (val.is_a? String or val.is_a? Symbol)
@@ -225,7 +285,6 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
       if (val = pairs[in_config_name])
         # We've recognized a value that maps to an actual type property, delete
         # it from the pairs and copy it as an actual property
-        pairs.delete(in_config_name)
         mangle_method_name="mangle__#{type_name}"
         if self.respond_to?(mangle_method_name)
           rv = self.send(mangle_method_name, val)
@@ -291,6 +350,17 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     return rv
   end
 
+  def self.mangle__ipaddr_aliases(data)
+    # incoming data is list of 3-element lists:
+    # [network, gateway, metric]
+    # metric is optional
+    rv = []
+    data.each do |d|
+      rv << d[0]
+    end
+    return rv.sort
+  end
+
   def self.mangle__ethtool(data)
     # incoming data is list of 3-element lists:
     # [key, interface, abbrv, value]
@@ -320,6 +390,10 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     return rv
   end
 
+  def self.mangle__jacks(data)
+    [data[0][0], data[0][1]]
+  end
+
   ###
   # Hash to file
 
@@ -337,9 +411,10 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     provider = providers[0]
     content, props = iface_file_header(provider)
 
-    property_mappings.keys.select{|v| ! properties_fake.include?(v)}.each do |type_name|
+    property_mappings.reject{|k,v| (properties_fake.include?(k) or v.empty?)}.keys.each do |type_name|
       next if props.has_key? type_name
       val = provider.send(type_name)
+      next if ( val.is_a?(Array) and val.reject{ |x| x.to_s == 'absent' }.empty? )
       if val and val.to_s != 'absent'
         props[type_name] = val
       end
@@ -348,6 +423,8 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     debug("format_file('#{filename}')::properties: #{props.inspect}")
     pairs = self.unmangle_properties(provider, props)
 
+
+
     pairs.each_pair do |key, val|
       content << "#{key} #{val}" if ! val.nil?
     end
@@ -355,7 +432,7 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     #add to content unmangled collected-properties
     collected_properties.keys.each do |type_name|
       data = provider.send(type_name)
-      if !(data.nil? or data.empty?)
+      if ! ['', 'absent'].include? data.to_s
         mangle_method_name="unmangle__#{type_name}"
         if self.respond_to?(mangle_method_name)
           rv = self.send(mangle_method_name, provider, data)
@@ -390,7 +467,14 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
         else
           rv = val
         end
-        pairs[in_config_name] = rv if ! [nil, :absent].include? rv
+        # assembly one-line option set
+        if oneline_properties.has_key? type_name
+          _key = oneline_properties[type_name][:store_to]
+          pairs[_key] ||= ''
+          pairs[_key] += "#{oneline_properties[type_name][:field]}=#{rv} "
+        else
+          pairs[in_config_name] = rv if ! [nil, :absent].include? rv
+        end
       end
     end
 
@@ -446,6 +530,18 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
     rv
   end
 
+  def self.unmangle__ipaddr_aliases(provider, data)
+    # should generate set of lines:
+    # "post-up ip addr add 192.168.1.43/24 dev $IFACE| true"
+    return [] if ['', 'absent'].include? data.to_s
+    rv = []
+    data.each do |cidr|
+      next if ['', 'absent'].include? cidr.to_s
+      rv << "post-up ip addr add #{cidr} dev #{provider.name} | true "
+    end
+    rv
+  end
+
   def self.unmangle__delay_while_up(provider, data)
     # should generate one line:
     # "post-up sleep NN"
@@ -470,6 +566,15 @@ class Puppet::Provider::L23_stored_config_ubuntu < Puppet::Provider::L23_stored_
       end
     end
     return rv
+  end
+
+  def self.unmangle__jacks(provider, data)
+    rv = []
+    pre_up = "pre-up ip link add #{data[0]} mtu 1500 type veth peer name #{data[1]} mtu 1500"
+    pre_up = "pre-up ip link add #{data[0]} mtu #{provider.send(:mtu)} type veth peer name #{data[1]} mtu #{provider.send(:mtu)}" unless ['', 'absent'].include?(provider.send(:mtu).to_s)
+    rv << pre_up
+    rv << "post-up ip link set up dev #{data[1]}"
+    rv << "post-down ip link del #{data[0]}"
   end
 
 end

@@ -36,7 +36,11 @@ Puppet::Type.newtype(:l23_stored_config) do
 
   newproperty(:if_type) do
     desc "Device type. Service property, shouldn't be setting by puppet"
-    newvalues(:ethernet, :bridge, :bond)
+    newvalues(:ethernet, :bridge, :bond, :patch, :vport)
+  end
+
+  newproperty(:if_provider) do
+    desc "Device provider. Service property, shouldn't be setting by puppet"
   end
 
   newproperty(:bridge, :array_matching => :all) do
@@ -123,14 +127,14 @@ Puppet::Type.newtype(:l23_stored_config) do
     aliasvalue(0,      :absent)
     defaultto :absent
     validate do |val|
-      min_vid = 1
+      min_vid = 0
       max_vid = 4094
       if ! (val.to_s == 'absent' or (min_vid .. max_vid).include?(val.to_i))
         raise ArgumentError, "'#{val}' is not a valid 802.1q NALN_ID (must be a integer value in range (#{min_vid} .. #{max_vid})"
       end
     end
     munge do |val|
-      ((val == :absent)  ?  :absent  :  val.to_i)
+      ((val == :absent or val.to_s == '0')  ?  :absent  :  val.to_i)
     end
   end
 
@@ -148,6 +152,37 @@ Puppet::Type.newtype(:l23_stored_config) do
     aliasvalue(:undef, :absent)
     aliasvalue(:nil,   :absent)
     defaultto :absent
+  end
+
+  newproperty(:ipaddr_aliases, :array_matching => :all) do
+    desc "Additional IP addresses for interface"
+    newvalues(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/, :absent, :none, :undef, :nil)
+    aliasvalue(:none,  :absent)
+    aliasvalue(:undef, :absent)
+    aliasvalue(:nil,   :absent)
+    defaultto :absent
+
+    def is_absent(value)
+      if value.is_a?(Hash) or value.is_a?(Array)
+        ( value.empty?  ?  nil  :  value )
+      else
+        ( ['', 'nil', 'none', 'absent'].include?(value.to_s.downcase)  ?  nil  :  value.to_s )
+      end
+    end
+
+    def should_to_s(value)
+      (is_absent(value).nil?  ?  ''  :  "#{value.join(':')}")
+    end
+
+    def is_to_s(value)
+      (is_absent(value).nil?  ?  ''  :  "#{value.join(':')}")
+    end
+
+    def insync?(value)
+      val  = (is_absent(value).nil?  ?  ''  :  should_to_s(value.sort) )
+      shou = (is_absent(value).nil?  ?  ''  :  should_to_s(should.sort) )
+      val == shou
+    end
   end
 
   newproperty(:gateway) do
@@ -194,7 +229,7 @@ Puppet::Type.newtype(:l23_stored_config) do
 
   newproperty(:bond_master) do
     desc "bond name for bonded interface"
-    newvalues(/^[\w+\-]+$/, :none, :undef, :nil, :absent)
+    newvalues(/^\w[\w+\-]*\w$/, :none, :undef, :nil, :absent)
     aliasvalue(:none,  :absent)
     aliasvalue(:undef, :absent)
     aliasvalue(:nil,   :absent)
@@ -203,7 +238,7 @@ Puppet::Type.newtype(:l23_stored_config) do
 
   newproperty(:bond_slaves, :array_matching => :all) do
     desc "slave ports for bond interface"
-    newvalues(/^[\w+\-]+$/, :false, :none, :undef, :nil, :absent)
+    newvalues(/^\w[\w+\-\.]*\w$/, :false, :none, :undef, :nil, :absent)
     #aliasvalue(:absent, :none)  # none is a valid config value
     aliasvalue(:false, :none)
     aliasvalue(:undef, :absent)
@@ -213,8 +248,26 @@ Puppet::Type.newtype(:l23_stored_config) do
 
   newproperty(:bond_mode)
   newproperty(:bond_miimon)
+  newproperty(:bond_lacp)
   newproperty(:bond_lacp_rate)
   newproperty(:bond_xmit_hash_policy)
+
+  newproperty(:bond_updelay) do
+    newvalues(/^\d+$/)
+  end
+
+  newproperty(:bond_downdelay) do
+    newvalues(/^\d+$/)
+  end
+
+  newproperty(:bond_ad_select) do
+    validate do |val|
+      allowed_values = ['0','1','2','stable','bandwidth','count']
+      if ! allowed_values.include? val.to_s
+        raise ArgumentError, "'#{val}' is not a valid bond_ad_select. Only #{allowed_values.join(', ')} allowed.)"
+      end
+    end
+  end
 
   # # `:options` provides an arbitrary passthrough for provider properties, so
   # # that provider specific behavior doesn't clutter up the main type but still
@@ -312,7 +365,7 @@ Puppet::Type.newtype(:l23_stored_config) do
 
   def generate
     # if_type = :ethernet is the same as if_type = nil
-    if (!([:absent, :none, :nil, :undef] & self[:bridge]).any? and ([:ethernet, :bond].include? self[:if_type] or self[:if_type].nil?))
+    if (!([:absent, :none, :nil, :undef] & self[:bridge]).any? and ([:ethernet, :bond, :vport, :patch].include? self[:if_type] or self[:if_type].nil?))
       self[:bridge].each do |bridge|
         br = self.catalog.resource('L23_stored_config', bridge)
         fail("Stored_config resource for bridge '#{bridge}' not found for port '#{self[:name]}'!") if ! br

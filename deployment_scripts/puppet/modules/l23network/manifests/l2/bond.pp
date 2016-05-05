@@ -1,6 +1,7 @@
 # == Define: l23network::l2::bond
 #
-# Create open vSwitch port bonding and add to the OVS bridge.
+# Create linux native or Open vSwitch bond port
+#
 #
 # === Parameters
 #
@@ -8,10 +9,13 @@
 #   Bond name.
 #
 # [*bridge*]
-#   Bridge that will contain this bond.
+#   Bridge that will contain this bond. Is only required for OVS bonds
 #
 # [*interfaces*]
 #   List of interfaces in this bond.
+#
+# [*provider*]
+#  This manifest supports lnx or ovs providers
 
 define l23network::l2::bond (
   $ensure                  = present,
@@ -23,7 +27,7 @@ define l23network::l2::bond (
   $onboot                  = undef,
   $delay_while_up          = undef,
 # $ethtool                 = undef,
-  $bond_properties         = undef,  # bond configuration options
+  $bond_properties         = {},  # bond configuration options
   $interface_properties    = undef,  # configuration options for included interfaces (mtu, ethtool, etc...)
   $vendor_specific         = undef,
   $monolith_bond_providers = undef,
@@ -62,6 +66,18 @@ define l23network::l2::bond (
     'encap3+4'
   ]
 
+  $lacp_states = [
+    'off',
+    'passive',
+    'active'
+  ]
+
+  $ad_select_states = [
+    'stable',
+    'bandwidth',
+    'count'
+  ]
+
   # calculate string representation for bond_mode
   if ! $bond_properties[mode] {
     # default value by design https://www.kernel.org/doc/Documentation/networking/bonding.txt
@@ -72,42 +88,73 @@ define l23network::l2::bond (
     $bond_mode = $bond_properties[mode]
   }
 
-  # calculate string representation for lacp_rate
-  if $bond_mode == '802.3ad' {
-    if ! $bond_properties[lacp_rate] {
-      # default value by design https://www.kernel.org/doc/Documentation/networking/bonding.txt
-      $lacp_rate = $lacp_rates[0]
-    } elsif is_integer($bond_properties[lacp_rate]) and $bond_properties[lacp_rate] < size($lacp_rates) {
-      $lacp_rate = $lacp_rates[$bond_properties[lacp_rate]]
-    } else {
-      $lacp_rate = $bond_properties[lacp_rate]
-    }
-  }
-
-  # calculate default miimon
-  if is_integer($bond_properties[miimon]) and $bond_properties[miimon] >= 0 {
-    $miimon = $bond_properties[miimon]
-  } else {
-    # recommended default value https://www.kernel.org/doc/Documentation/networking/bonding.txt
-    $miimon = 100
+  # init default bond properties hash
+  $default_bond_properties = {
+    mode => $bond_mode,
   }
 
   # calculate string representation for xmit_hash_policy
   if ( $bond_mode == '802.3ad' or $bond_mode == 'balance-xor' or $bond_mode == 'balance-tlb') {
     if ! $bond_properties[xmit_hash_policy] {
       # default value by design https://www.kernel.org/doc/Documentation/networking/bonding.txt
-      $xmit_hash_policy = $xmit_hash_policies[0]
+      $default_bond_properties[xmit_hash_policy] = $xmit_hash_policies[0]
     } else {
-      $xmit_hash_policy = $bond_properties[xmit_hash_policy]
+      $default_bond_properties[xmit_hash_policy] = $bond_properties[xmit_hash_policy]
     }
+  } else {
+    # non-lacp
+    $default_bond_properties[xmit_hash_policy] = undef
   }
 
-  # default bond properties
-  $default_bond_properties = {
-    mode             => $bond_mode,
-    miimon           => $miimon,
-    lacp_rate        => $lacp_rate,
-    xmit_hash_policy => $xmit_hash_policy
+  # calculate string representation for lacp_rate
+  if $bond_mode == '802.3ad' or ($provider == 'ovs' and ( $bond_properties[lacp] == 'active' or $bond_properties[lacp] == 'passive')) {
+    if is_integer($bond_properties[lacp_rate]) and $bond_properties[lacp_rate] < size($lacp_rates) {
+      $default_bond_properties[lacp_rate] = $lacp_rates[$bond_properties[lacp_rate]]
+    } else {
+      # default value by design https://www.kernel.org/doc/Documentation/networking/bonding.txt
+      $default_bond_properties[lacp_rate] = pick($bond_properties[lacp_rate], $lacp_rates[0])
+    }
+    if $provider == 'ovs' {
+      $default_bond_properties[lacp] = $bond_properties[lacp]
+    } else {
+      $default_bond_properties[lacp] = undef
+    }
+  } else {
+    $default_bond_properties[lacp_rate] = undef
+    $default_bond_properties[lacp] = undef
+  }
+
+  # calculate default miimon
+  if is_integer($bond_properties[miimon]) and $bond_properties[miimon] >= 0 {
+    $default_bond_properties[miimon] = $bond_properties[miimon]
+  } else {
+    # recommended default value https://www.kernel.org/doc/Documentation/networking/bonding.txt
+    $default_bond_properties[miimon] = 100
+  }
+
+  # calculate default updelay
+  if is_integer($bond_properties[updelay]) and $bond_properties[updelay] >= 0 {
+    $default_bond_properties[updelay] = $bond_properties[updelay]
+  } else {
+    $default_bond_properties[updelay] = 200
+  }
+
+  # calculate default downdelay
+  if is_integer($bond_properties[downdelay]) and $bond_properties[downdelay] >= 0 {
+    $default_bond_properties[downdelay] = $bond_properties[downdelay]
+  } else {
+    $default_bond_properties[downdelay] = 200
+  }
+
+  # calculate default ad_select
+  if $bond_properties[ad_select] {
+    if is_integer($bond_properties[ad_select]) {
+      $default_bond_properties[ad_select] = $ad_select_states[$bond_properties[ad_select]]
+    } else {
+      $default_bond_properties[ad_select] = $bond_properties[ad_select]
+    }
+  } else {
+    $default_bond_properties[ad_select] = $ad_select_states[1]
   }
 
   $real_bond_properties = merge($bond_properties, $default_bond_properties)
@@ -120,6 +167,10 @@ define l23network::l2::bond (
     fail("Delay for waiting after UP interface ${port} should be numeric, not an '$delay_while_up'.")
   }
 
+  if ! $bridge and $provider == 'ovs' {
+    fail("Bridge is not defined for bond ${bond}. This is necessary for Open vSwitch bonds")
+  }
+
   # Use $monolith_bond_providers list for prevent creating ports for monolith bonds
   $actual_provider_for_bond_interface = $provider ? {
     undef   => default_provider_for('L2_port'),
@@ -127,13 +178,29 @@ define l23network::l2::bond (
   }
   $eee = default_provider_for('L2_port')
 
-  if ! member($actual_monolith_bond_providers, $actual_provider_for_bond_interface) {
+  if member($actual_monolith_bond_providers, $actual_provider_for_bond_interface) {
+    # just interfaces in UP state should be presented
+    l23network::l2::bond_interface{ $interfaces:
+      bond                 => $bond,
+      bond_is_master       => false,
+      mtu                  => $mtu,
+      interface_properties => $interface_properties,
+      ensure               => $ensure,
+    }
+  } else {
     l23network::l2::bond_interface{ $interfaces:
       bond                 => $bond,
       mtu                  => $mtu,
       interface_properties => $interface_properties,
       ensure               => $ensure,
       provider             => $actual_provider_for_bond_interface
+    }
+  }
+
+  if (! defined(L23network::L2::Bridge[$bridge]) and $provider == 'ovs') {
+    l23network::l2::bridge { $bridge:
+      ensure    => 'present',
+      provider  => $provider,
     }
   }
 
@@ -157,8 +224,12 @@ define l23network::l2::bond (
       bond_master           => undef,
       bond_slaves           => $interfaces,
       bond_miimon           => $real_bond_properties[miimon],
+      bond_lacp             => $real_bond_properties[lacp],
       bond_lacp_rate        => $real_bond_properties[lacp_rate],
       bond_xmit_hash_policy => $real_bond_properties[xmit_hash_policy],
+      bond_downdelay        => $real_bond_properties[downdelay],
+      bond_updelay          => $real_bond_properties[updelay],
+      bond_ad_select        => $real_bond_properties[ad_select],
       delay_while_up        => $delay_while_up,
       vendor_specific       => $vendor_specific,
       provider              => $config_provider
@@ -184,7 +255,7 @@ define l23network::l2::bond (
 
   }
 
-  if $::osfamily =~ /(?i)redhat/ {
+  if $::l23_os =~ /(?i:redhat|centos)/ {
     if $delay_while_up {
       file {"${::l23network::params::interfaces_dir}/interface-up-script-${bond}":
         ensure  => present,
