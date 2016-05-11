@@ -1,5 +1,4 @@
 #Class cisco_aci::opflex_ml2
-    #$pre_existing_l3_context            = true,
 class cisco_aci::opflex_ml2 (
     $ha_prefix                          = '',
     $role                               = 'compute',
@@ -15,19 +14,8 @@ class cisco_aci::opflex_ml2 (
     $admin_username                     = 'admin',
     $admin_password                     = 'admin',
     $admin_tenant                       = 'admin',
-    $ext_net_enable                     = false,
-    $ext_net_name                       = 'ext',
-    $ext_net_switch                     = '101',
-    $ext_net_port                       = '1/1',
-    $ext_net_subnet                     = '10.0.0.0/24',
-    $ext_net_gateway                    = '10.0.0.1',
     $db_connection                      = '',
-    $ext_net_config                     = false,
-    $pre_existing_vpc                   = true,
-    $single_tenant_mode                 = false,
-    $shared_context_name                = '',
     $apic_external_network              = '',
-    $pre_existing_external_network_on   = '',
     $external_epg                       = '',
     $opflex_interface                   = '',
     $apic_infra_vlan                    = '',
@@ -49,10 +37,6 @@ class cisco_aci::opflex_ml2 (
         }
     }
 
-    if ($ext_net_enable == true) {
-        $apic_external_network = $ext_net_name
-    }
-
     case $role {
         /controller/: {
             if $use_lldp {
@@ -66,15 +50,14 @@ class cisco_aci::opflex_ml2 (
                 admin_password => $admin_password,
                 admin_tenant   => $admin_tenant,
             }
-            if ($role == 'primary-controller' and $ext_net_enable == true){
-                class {'neutron::network':
-                    tenant_name     => $admin_tenant,
-                    ext_net_name    => $ext_net_name,
-                    ext_net_subnet  => $ext_net_subnet,
-                    ext_net_gateway => $ext_net_gateway,
-                }
-
-            }
+            #if ($role == 'primary-controller' and $ext_net_enable == true){
+            #    class {'neutron::network':
+            #        tenant_name     => $admin_tenant,
+            #        ext_net_name    => $ext_net_name,
+            #        ext_net_subnet  => $ext_net_subnet,
+            #        ext_net_gateway => $ext_net_gateway,
+            #    }
+            #}
         }
         'compute': {
             class {'neutron::services::ovs_agent':
@@ -118,7 +101,6 @@ class cisco_aci::opflex_ml2 (
             
             class {'neutron::config_dhcp':}
         
-                #pre_existing_l3_context            => $pre_existing_l3_context,
             class {'neutron::config_apic':
                 apic_system_id                     => $apic_system_id,
                 apic_hosts                         => $apic_hosts,
@@ -126,18 +108,7 @@ class cisco_aci::opflex_ml2 (
                 apic_password                      => $apic_password,
                 static_config                      => $static_config,
                 additional_config                  => $additional_config,
-                ext_net_enable                     => $ext_net_enable,
-                ext_net_name                       => $ext_net_name,
-                ext_net_switch                     => $ext_net_switch,
-                ext_net_port                       => $ext_net_port,
-                ext_net_subnet                     => $ext_net_subnet,
-                ext_net_gateway                    => $ext_net_gateway,
-                ext_net_config                     => $ext_net_config,
-                pre_existing_vpc                   => $pre_existing_vpc,
-                single_tenant_mode                 => $single_tenant_mode,
-                shared_context_name                => $shared_context_name,
                 apic_external_network              => $apic_external_network,
-                pre_existing_external_network_on   => $pre_existing_external_network_on,
                 external_epg                       => $external_epg,
                 gbp                                => false,
                 snat_gateway_mask                  => $snat_gateway_mask,
@@ -162,8 +133,4 @@ class cisco_aci::opflex_ml2 (
         br_to_patch                        => $br_to_patch,
     }
 
-    #class {'opflex::disable_agents':
-    #    role      => $role,
-    #    require   => Class['opflex::opflex_agent'],
-    #}
 }
