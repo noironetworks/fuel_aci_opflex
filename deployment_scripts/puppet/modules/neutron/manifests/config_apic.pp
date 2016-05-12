@@ -6,18 +6,7 @@ class neutron::config_apic (
     $apic_password                      = 'password',
     $static_config                      = '',
     $additional_config                  = '',
-    $ext_net_enable                     = false,
-    $ext_net_name                       = 'ext',
-    $ext_net_switch                     = '101',
-    $ext_net_port                       = '1/1',
-    $ext_net_subnet                     = '10.0.0.0/24',
-    $ext_net_gateway                    = '10.0.0.1',
-    $ext_net_config                     = false,
-    $pre_existing_vpc                   = true,
-    $pre_existing_l3_context            = true,
-    $shared_context_name                = '',
     $apic_external_network              = '',
-    $pre_existing_external_network_on   = '',
     $external_epg                       = '',
     $gbp                                = true,
     $snat_gateway_mask                  = '',
@@ -43,19 +32,10 @@ class neutron::config_apic (
         }
     }
 
-    if ($ext_net_enable == false) {
-        $apic_ext_net = $apic_external_network
-    }else {
-        $apic_ext_net = $ext_net_name
-    }
-
-    if ($pre_existing_vpc == true) {
-        $apic_provision_infra_on       = 'False'
-        $apic_provision_hostlinks_on   = 'False'
-    }else {
-        $apic_provision_infra_on       = 'True'
-        $apic_provision_hostlinks_on   = 'True'
-    }
+    $apic_ext_net = $apic_external_network
+ 
+    $apic_provision_infra_on       = 'False'
+    $apic_provision_hostlinks_on   = 'False'
 
     neutron_plugin_ml2_cisco {
         'DEFAULT/apic_system_id':                              value => $apic_system_id;
@@ -70,7 +50,8 @@ class neutron::config_apic (
         'ml2_cisco_apic/enable_aci_routing':                   value => 'True'; 
         'ml2_cisco_apic/enable_optimized_dhcp':                value => $optimized_dhcp;
         'ml2_cisco_apic/enable_optimized_metadata':            value => $optimized_metadata;
-        "apic_external_network:${apic_ext_net}/preexisting":   value => $pre_existing_external_network_on;
+        'ml2_cisco_apic/single_tenant_mode':                   value => 'False';
+        "apic_external_network:${apic_ext_net}/preexisting":   value => 'True';
         "apic_external_network:${apic_ext_net}/external_epg":  value => $external_epg;
         "apic_external_network:${apic_ext_net}/host_pool_cidr":  value => $snat_gateway_mask;
         "opflex/networks":                                     value => '*';
@@ -86,19 +67,4 @@ class neutron::config_apic (
     additional_configuration { $additional_config_options: }
     static_configuration { $static_config_options: }
 
-    if ($pre_existing_l3_context == true) {
-        neutron_plugin_ml2_cisco {
-            'ml2_cisco_apic/shared_context_name':  value => $shared_context_name;
-        }
-    }
-
-    if ($ext_net_enable == true){
-        neutron_plugin_ml2_cisco {
-            "apic_external_network:${apic_ext_net}/switch":       value => $ext_net_switch;
-            "apic_external_network:${apic_ext_net}/port":         value => $ext_net_port;
-            "apic_external_network:${apic_ext_net}/cidr_exposed": value => $ext_net_subnet;
-            "apic_external_network:${apic_ext_net}/gateway_ip":   value => $ext_net_gateway;
-
-        }
-    }
 }
