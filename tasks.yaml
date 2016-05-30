@@ -3,10 +3,18 @@
 # ['cinder', 'compute'] will be applied only on
 # cinder and compute nodes
 - role: ['primary-controller','controller','compute']
-  stage: post_deployment
+  stage: post_deployment/4000
   type: puppet
   parameters:
-    puppet_manifest: puppet/site.pp
-    puppet_modules: puppet/modules/
+    puppet_manifest: puppet/manifests/site.pp
+    puppet_modules: puppet/modules/:/etc/puppet/modules
+    timeout: 3600
+
+- role: ['primary-controller','controller','compute']
+  stage: post_deployment/4001
+  type: puppet
+  parameters:
+    puppet_manifest: puppet/reload.pp
+    puppet_modules: puppet/modules/:/etc/puppet/modules
     timeout: 3600
 

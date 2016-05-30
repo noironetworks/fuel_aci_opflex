@@ -16,7 +16,7 @@ class neutron::config_apic (
     $ext_net_encap			= '',
     $ext_net_router_id			= '',
     $pre_existing_vpc                   = true,
-    $pre_existing_l3_context            = true,
+    $pre_existing_l3_context            = false,
     $shared_context_name                = '',
     $apic_external_network              = '',
     $pre_existing_external_network_on   = '',
@@ -55,8 +55,14 @@ class neutron::config_apic (
         $apic_provision_infra_on       = 'False'
         $apic_provision_hostlinks_on   = 'False'
     }else {
-        $apic_provision_infra_on       = 'True'
-        $apic_provision_hostlinks_on   = 'True'
+        $apic_provision_infra_on       = 'False'
+        $apic_provision_hostlinks_on   = 'False'
+    }
+
+    if ($ext_net_enable == true) {
+        $preexisting = 'False'
+    } else {
+       $preexisting = $pre_existing_external_network_on
     }
 
     if ($ext_net_enable == true) {

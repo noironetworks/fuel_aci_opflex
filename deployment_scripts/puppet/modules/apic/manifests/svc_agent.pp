@@ -34,7 +34,7 @@ class apic::svc_agent (
         Neutron_plugin_ml2_cisco<||>    ~> Service['apic-svc-agent']
         File_line<||>                   ~> Service['apic-svc-agent']
 
-    }else{
+    } else {
         exec {'disabling_cisco_svc_agent':
             command => "/bin/mv /etc/init/${$::apic::params::service_apic_svc_agent}.conf /etc/init/${$::apic::params::service_apic_svc_agent}.conf.disabled",
             onlyif  => "/usr/bin/test -f /etc/init/${$::apic::params::service_apic_svc_agent}.conf",

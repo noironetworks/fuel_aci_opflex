@@ -27,7 +27,7 @@ class cisco_aci::opflex_ml2 (
     $db_connection                      = '',
     $ext_net_config                     = false,
     $pre_existing_vpc                   = true,
-    $pre_existing_l3_context            = true,
+    $pre_existing_l3_context            = false,
     $shared_context_name                = '',
     $apic_external_network              = '',
     $pre_existing_external_network_on   = '',
@@ -59,6 +59,21 @@ class cisco_aci::opflex_ml2 (
     }
 
     if "controller" in $roles or "primary-controller" in $roles {
+        if ("primary-controller" in $roles) {
+          neutron_router_interface { 'router04:net04__subnet':
+            ensure => absent,
+          } ~>
+          neutron_router { 'router04':
+            ensure => absent,
+          } ~>
+          neutron_network { 'net04':
+            ensure => absent,
+          } ~>
+          neutron_network { 'net04_ext':
+            ensure => absent,
+          }
+        }
+
         if $use_lldp {
             include 'apic::svc_agent'
         }else {
@@ -76,12 +91,13 @@ class cisco_aci::opflex_ml2 (
             admin_tenant   => $admin_tenant,
         }
         if ("primary-controller" in $roles and $ext_net_enable == true){
-            class {'neutron::network':
+            class {'neutron::networks':
                 tenant_name     => $admin_tenant,
                 ext_net_name    => $ext_net_name,
                 ext_net_subnet  => $ext_net_neutron_subnet,
                 ext_net_gateway => $ext_net_neutron_gateway,
             }
+
         }
     } elsif "compute" in $roles {
 	class {'neutron::services::ovs_agent':
@@ -99,26 +115,21 @@ class cisco_aci::opflex_ml2 (
     Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-server' |>
     Neutron_dhcp_agent_config <| |> ~> Service <| title == 'neutron-dhcp-agent' |>
 
-    #KVR: comment out next 3 lines, dont need neutron-ovs-agent
-    #Neutron_config <| |> ~> Service <| title == 'neutron-ovs-agent' |>
-    #Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-ovs-agent' |>
-    #Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-ovs-agent' |>
     File <| title == 'neutron_initd' |> ~> Service <| title == 'neutron-server' |>
 
     if $use_lldp {
         include 'lldp'
         include 'apic::host_agent'
-
     }
 
     if "controller" in $roles or "primary-controller" in $roles {
-        class {'neutron::config':
-            service_plugins   => $service_plugins,
-            mechanism_drivers => $mechanism_drivers,
-            db_connection     => $db_connection,
-            opflex_encap_type => $opflex_encap_type,
-        }
-            
+        class {'::neutron::configs':
+           service_plugins   => $service_plugins,
+           db_connection     => $db_connection,
+           opflex_encap_type => $opflex_encap_type,
+	   mechanism_drivers => $mechanism_drivers,
+	}
+         
         class {'neutron::config_dhcp':}
     
         class {'neutron::config_apic':

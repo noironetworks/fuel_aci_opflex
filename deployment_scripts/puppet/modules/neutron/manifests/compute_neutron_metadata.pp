@@ -40,10 +40,4 @@ class neutron::compute_neutron_metadata (
     }
   }
 
-  file {'/usr/bin/neutron-metadata-agent':
-     mode    => '0755',
-     content => template('neutron/neutron-metadata-agent.erb'),
-     owner   => 'root',
-     group   => 'root',
-  }
 }

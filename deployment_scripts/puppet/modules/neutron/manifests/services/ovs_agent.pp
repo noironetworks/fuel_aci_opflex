@@ -13,14 +13,6 @@ class neutron::services::ovs_agent (
         }
     }
 
-#    service { 'neutron-ovs-agent':
-#        ensure     => 'stopped',
-#        name       => $::neutron::params::service_ovs_agent,
-#        enable     => false,
-#        hasstatus  => true,
-#        hasrestart => true,
-#    }
-
     package { 'neutron-plugin-openvswitch-agent':
         ensure => 'purged',
     }
@@ -37,17 +29,10 @@ class neutron::services::ovs_agent (
         hasrestart => true,
     }
 
-#    service {'agent-ovs':
-#        ensure     => 'running',
-#        name       => 'agent-ovs',
-#        enable     => true,
-#        hasstatus  => true,
-#        hasrestart => false,
-#    }
-
-    #Neutron_config<||>              ~> Service['neutron-ovs-agent']
-    #Neutron_plugin_ml2<||>          ~> Service['neutron-ovs-agent']
-    #Neutron_plugin_ml2_cisco<||>    ~> Service['neutron-ovs-agent']
-    #File_line<||>                   ~> Service['neutron-ovs-agent']
+    exec { 'restart neutron-cisco-apic-host-agent restart':
+      command => 'service neutron-cisco-apic-host-agent restart',
+      path    => '/usr/sbin:/bin:/sbin:/usr/bin',
+      onlyif  => 'service neutron-cisco-apic-host-agent  status',
+    }
 
 }
