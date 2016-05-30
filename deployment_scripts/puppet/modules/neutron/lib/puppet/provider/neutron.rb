@@ -3,9 +3,6 @@ require 'puppet/util/inifile'
 
 class Puppet::Provider::Neutron < Puppet::Provider
 
-  #NOTE(xenolog): self.prefetch was removed with comment:
-  # FIXME:(xarses) needs to be abstraced from subresources and re-written here
-
   def self.conf_filename
     '/etc/neutron/neutron.conf'
   end
@@ -29,13 +26,21 @@ class Puppet::Provider::Neutron < Puppet::Provider
   end
 
   def self.get_neutron_credentials
-    auth_keys = ['auth_host', 'auth_port', 'auth_protocol',
-                 'admin_tenant_name', 'admin_user', 'admin_password']
+    auth_keys = ['admin_tenant_name', 'admin_user', 'admin_password']
+    deprecated_auth_url = ['auth_host', 'auth_port', 'auth_protocol']
     conf = neutron_conf
     if conf and conf['keystone_authtoken'] and
-        auth_keys.all?{|k| !conf['keystone_authtoken'][k].nil?}
+        auth_keys.all?{|k| !conf['keystone_authtoken'][k].nil?} and
+        ( deprecated_auth_url.all?{|k| !conf['keystone_authtoken'][k].nil?} or
+        !conf['keystone_authtoken']['auth_uri'].nil? )
       creds = Hash[ auth_keys.map \
                    { |k| [k, conf['keystone_authtoken'][k].strip] } ]
+      if !conf['keystone_authtoken']['auth_uri'].nil?
+        creds['auth_uri'] = conf['keystone_authtoken']['auth_uri']
+      else
+        q = conf['keystone_authtoken']
+        creds['auth_uri'] = "#{q['auth_protocol']}://#{q['auth_host']}:#{q['auth_port']}/v2.0/"
+      end
       if conf['DEFAULT'] and !conf['DEFAULT']['nova_region_name'].nil?
         creds['nova_region_name'] = conf['DEFAULT']['nova_region_name']
       end
@@ -57,7 +62,11 @@ correctly configured.")
 
   def self.get_auth_endpoint
     q = neutron_credentials
-    "#{q['auth_protocol']}://#{q['auth_host']}:#{q['auth_port']}/v2.0/"
+    if q['auth_uri'].nil?
+      return "#{q['auth_protocol']}://#{q['auth_host']}:#{q['auth_port']}/v2.0/"
+    else
+      return "#{q['auth_uri']}".strip
+    end
   end
 
   def self.neutron_conf
@@ -70,16 +79,15 @@ correctly configured.")
   def self.auth_neutron(*args)
     q = neutron_credentials
     authenv = {
-      :OS_AUTH_URL    => self.auth_endpoint,
-      :OS_USERNAME    => q['admin_user'],
-      :OS_TENANT_NAME => q['admin_tenant_name'],
-      :OS_PASSWORD    => q['admin_password']
+      :OS_AUTH_URL      => self.auth_endpoint,
+      :OS_USERNAME      => q['admin_user'],
+      :OS_TENANT_NAME   => q['admin_tenant_name'],
+      :OS_PASSWORD      => q['admin_password'],
+      :OS_ENDPOINT_TYPE => 'internalURL'
     }
     if q.key?('nova_region_name')
       authenv[:OS_REGION_NAME] = q['nova_region_name']
     end
-    # NOTE(bogdando) contribute change to upstream #1384097:
-    #   enhanced message checks within a given time frame
     rv = nil
     timeout = 120
     end_time = Time.now.to_i + timeout
@@ -105,8 +113,7 @@ correctly configured.")
           break
         else
           wait = end_time - current_time
-          Puppet::debug("Non-fatal error: \"#{e.message}\"")
-          notice("Neutron API not avalaible. Wait up to #{wait} sec.")
+          notice("Unable to complete neutron request due to non-fatal error: \"#{e.message}\". Retrying for #{wait} sec.")
         end
         sleep(2)
         # Note(xarses): Don't remove, we know that there is one of the
@@ -129,10 +136,8 @@ correctly configured.")
     ids = []
     list = auth_neutron("#{type}-list", '--format=csv',
                         '--column=id', '--quote=none')
-    # NOTE(bogdando) contribute change to upstream #1384101:
-    #   raise Puppet exception, if resources list is empty
     if list.nil?
-      raise(Puppet::ExecutionFailure, "Can't prefetch #{type}-list Neutron or Keystone API is not avalaible.")
+      raise(Puppet::ExecutionFailure, "Can't retrieve #{type}-list because Neutron or Keystone API is not available.")
     end
 
     (list.split("\n")[1..-1] || []).compact.collect do |line|
@@ -144,11 +149,10 @@ correctly configured.")
   def self.get_neutron_resource_attrs(type, id)
     attrs = {}
     net = auth_neutron("#{type}-show", '--format=shell', id)
-    # NOTE(bogdando) contribute change to upstream #1384101:
-    #   raise Puppet exception, if list of resources' attributes is empty
     if net.nil?
-      raise(Puppet::ExecutionFailure, "Can't prefetch #{type}-show Neutron or Keystone API is not avalaible.")
+      raise(Puppet::ExecutionFailure, "Can't retrieve #{type}-show because Neutron or Keystone API is not available.")
     end
+
     last_key = nil
     (net.split("\n") || []).compact.collect do |line|
       if line.include? '='
@@ -189,77 +193,19 @@ correctly configured.")
     return results
   end
 
-  def self.auth_keystone(*args)
-    q = neutron_credentials
-    authenv = {
-      :OS_AUTH_URL    => self.auth_endpoint,
-      :OS_USERNAME    => q['admin_user'],
-      :OS_TENANT_NAME => q['admin_tenant_name'],
-      :OS_PASSWORD    => q['admin_password']
-    }
-    if q.key?('nova_region_name')
-      authenv[:OS_REGION_NAME] = q['nova_region_name']
-    end
-
-    rv = nil
-    timeout = 120
-    end_time = Time.now.to_i + timeout
-    loop do
-      begin
-        withenv authenv do
-          args = args.join(" ")
-          rv = keystone(args)
-        end
-        break
-      rescue Puppet::ExecutionFailure => e
-        if ! e.message =~ /(\(HTTP\s+400\))|
-              (400-\{\'message\'\:\s+\'\'\})|
-              (\[Errno 111\]\s+Connection\s+refused)|
-              (503\s+Service\s+Unavailable)|
-              (504\s+Gateway\s+Time-out)|
-              (\:\s+Maximum\s+attempts\s+reached)|
-              (Unauthorized\:\s+bad\s+credentials)|
-              (Max\s+retries\s+exceeded)/
-          raise(e)
-        end
-        current_time = Time.now.to_i
-        if current_time > end_time
-          #raise(e)
-          break
-        else
-          wait = end_time - current_time
-          Puppet::debug("Non-fatal error: \"#{e.message}\"")
-          notice("Keystone API not avalaible. Wait up to #{wait} sec.")
-        end
-        sleep(2)
-        # Note(xarses): Don't remove, we know that there is one of the
-        # Recoverable erros above, So we will retry a few more times
-      end
-    end
-    return rv
-  end
-
-  def auth_keystone(*args)
-    self.class.auth_neutron(args)
-  end
-
   def self.get_tenant_id(catalog, name)
-    rv = nil
-#    auth_keystone('tenant-list').each do |line|
-#      fields=line.split(/\s*\|\s*/)
-    fields = auth_keystone('tenant-list').split(/\s*\|\s*/)
-      fields.each do |line|
-      if fields[5] and fields[5].size == 32
-        if fields[6] == name
-          rv = fields[5]
-          break
-        end
+    instance_type = 'keystone_tenant'
+    instance = catalog.resource("#{instance_type.capitalize!}[#{name}]")
+    if ! instance
+      instance = Puppet::Type.type(instance_type).instances.find do |i|
+        i.provider.name == name
       end
     end
-    if rv.nil?
-      fail("Unable to get tenant-ID for tenant '#{name}'")
+    if instance
+      return instance.provider.id
+    else
+      fail("Unable to find #{instance_type} for name #{name}")
     end
-    return rv
   end
 
   def self.parse_creation_output(data)
