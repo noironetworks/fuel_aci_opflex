@@ -3,7 +3,7 @@ name: aci_opflex
 # Human-readable name for your plugin
 title: ACI Opflex Plugin
 # Plugin version
-version: 8.0.3
+version: 8.0.4
 # Description
 description: Enable to setup Openstack with ACI and Opflex
 # Required fuel version
@@ -23,7 +23,7 @@ is_hotpluggable: false
 releases:
   - os: ubuntu
     version: liberty-8.0
-    mode: ['ha', 'multinode']
+    mode: ['ha']
     deployment_scripts_path: deployment_scripts/
     repository_path: repositories/ubuntu
 
