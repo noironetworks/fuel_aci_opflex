@@ -12,6 +12,8 @@ class neutron::config_apic (
     $snat_gateway_mask                  = '',
     $optimized_dhcp                     = true,
     $optimized_metadata                 = true,
+    $edgenat                            = false,
+    $edgenat_vlan_range                 = '',
 ){
 
     $additional_config_hash = hash(split($additional_config, '[\n=]'))
@@ -54,6 +56,13 @@ class neutron::config_apic (
         "apic_external_network:${apic_ext_net}/external_epg":  value => $external_epg;
         "apic_external_network:${apic_ext_net}/host_pool_cidr":  value => $snat_gateway_mask;
         "opflex/networks":                                     value => '*';
+    }
+
+    if ($edgenat == true) {
+       neutron_plugin_ml2_cisco {
+          "apic_external_network:${apic_ext_net}/edge_nat":   value => 'True';
+          "apic_external_network:${apic_ext_net}/vlan_range": value => $edgenat_vlan_range;
+       }
     }
 
     if ($gbp == true) {

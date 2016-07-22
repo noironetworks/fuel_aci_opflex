@@ -18,8 +18,18 @@ class neutron::config (
         creates => '/usr/local/bin/neutron-rootwrap',
     }
     $service_plugin_set = neutron_service_plugins('r', "neutron.services.l3_router.l3_router_plugin.L3RouterPlugin:${service_plugins}")
+
+    $aci_hash = hiera('aci_opflex', {})
+    $router_enabled = $aci_hash['router_plugin']
+    $driver_type = $aci_hash['driver_type']
+    if $driver_type == "GBP" {
+       $splugin = "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,group_policy,neutron.services.metering.metering_plugin.MeteringPlugin"
+    } elsif ($driver_type == "ML2") {
+       $splugin = "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,neutron.services.metering.metering_plugin.MeteringPlugin"
+    }
+
     neutron_config {
-        'DEFAULT/service_plugins':  value => $service_plugin_set;
+        'DEFAULT/service_plugins':  value => $splugin;
         'DEFAULT/core_plugin':      value => 'neutron.plugins.ml2.plugin.Ml2Plugin';
         'database/connection':      value => $db_connection;
     }

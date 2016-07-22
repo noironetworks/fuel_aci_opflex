@@ -22,6 +22,7 @@ class neutron::params {
             $ha_ovs_agent           = 'p_neutron-plugin-openvswitch-agent'
             $initd_file_path        = '/etc/init/neutron-server.conf'
             $initd_file_template    = 'puppet:///modules/neutron/neutron-server.conf'
+            $initd_file_template_with_router    = 'puppet:///modules/neutron/neutron-server_router.conf'
         }
 
         default: {

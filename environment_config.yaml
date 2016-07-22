@@ -129,3 +129,94 @@ attributes:
     value: ""
     label: "Additional config"
     description: "Example:\nml2_cisco_apic/apic_vpc_pairs=201:202,203:204"
+  edgenat:
+    type: "checkbox"
+    weight: 81
+    value: false
+    label: "EdgeNAT"
+    description: "Enable Edge NAT"
+  edgenat_vlan_range:
+    type: "text"
+    weight: 82
+    value: ''
+    label: "Edge NAT vlan range"
+    description: "vlan range e.g. 2001:2020"
+    regex:
+      source: '\S'
+      error: "Error field cannot be empty"
+    restrictions:
+      - condition: "(settings:aci_opflex.edgenat.value == false)"
+        action: hide
+  router_plugin:
+    type: "checkbox"
+    weight: 83
+    value: false
+    label: "Router plugin"
+    description: "Enable router plugin"
+    restrictions:
+      - condition: "(settings:aci_opflex.edgenat.value == false)"
+        action: hide
+  router_mgmt_ip:
+    type: "text"
+    weight: 84
+    value: '1.1.1.2'
+    label: "Router IP address"
+    regex:
+      source: '^((?:\d|1?\d\d|2[0-4]\d|25[0-5])(?:\.(?:\d|1?\d\d|2[0-4]\d|25[0-5])){3})|(?:^)$'
+      error: "Invalid IP address"
+    restrictions:
+      - condition: "(settings:aci_opflex.router_plugin.value == false)"
+        action: hide
+  router_user:
+    type: "text"
+    weight: 85
+    value: 'admin'
+    label: "Router User name"
+    regex:
+      source: '\S'
+      error: "Error field cannot be empty"
+    restrictions:
+      - condition: "(settings:aci_opflex.router_plugin.value == false)"
+        action: hide
+  router_password:
+    type: "password"
+    weight: 86
+    value: ''
+    label: "Router User password"
+    regex:
+      source: '\S'
+      error: "Error field cannot be empty"
+    restrictions:
+      - condition: "(settings:aci_opflex.router_plugin.value == false)"
+        action: hide
+  router_internal_interface:
+    type: "text"
+    weight: 87
+    value: ''
+    label: "Router internal interface"
+    regex:
+      source: '\S'
+      error: "Error field cannot be empty"
+    restrictions:
+      - condition: "(settings:aci_opflex.router_plugin.value == false)"
+        action: hide
+  router_external_interface:
+    type: "text"
+    weight: 88
+    value: ''
+    label: "Router external interface"
+    regex:
+      source: '\S'
+      error: "Error field cannot be empty"
+    restrictions:
+      - condition: "(settings:aci_opflex.router_plugin.value == false)"
+        action: hide
+  external_segments:
+    type: "textarea"
+    weight: 89
+    value: ""
+    label: "External segments config blob"
+    restrictions:
+      - condition: "(settings:aci_opflex.router_plugin.value == false)"
+        action: hide
+    

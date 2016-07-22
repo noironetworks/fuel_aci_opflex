@@ -26,6 +26,8 @@ class cisco_aci::opflex_ml2 (
     $snat_gateway_mask                  = '',
     $optimized_dhcp                     = true,
     $optimized_metadata                 = true,
+    $edgenat                            = false,
+    $edgenat_vlan_range                 = '',
 ){
     include 'apic::params'
     include 'apic::api'
@@ -114,6 +116,8 @@ class cisco_aci::opflex_ml2 (
                 snat_gateway_mask                  => $snat_gateway_mask,
                 optimized_dhcp                     => $optimized_dhcp,
                 optimized_metadata                 => $optimized_metadata,
+                edgenat                            => $edgenat,
+                edgenat_vlan_range                 => $edgenat_vlan_range,
             }
         }
         default: {
