@@ -40,10 +40,21 @@ $ha_prefix = $deployment_mode ? {
 if ($aci_opflex_hash['driver_type'] == 'ML2') {
     $install_type = 'ML2'
     $class_name = 'opflex_ml2'
+    $gbp = false
 }elsif ($aci_opflex_hash['driver_type'] == 'GBP') {
     $install_type = 'GBP'
     $class_name = 'opflex_gbp'
+    $gbp = true
 }
+
+$edgenat = $aci_opflex_hash['edgenat']
+if $edgenat {
+    $edgenat_vlan_range = $aci_opflex_hash['edgenat_vlan_range']
+} else {
+    $edgenat_vlan_range = ''
+}
+
+$enable_router_plugin = $aci_opflex_hash['router_plugin']
 
 case $install_type {
     'ML2', 'GBP': {
@@ -75,7 +86,26 @@ case $install_type {
             snat_gateway_mask                        => $aci_opflex_hash['snat_gateway_mask'],
             optimized_dhcp                           => $aci_opflex_hash['optimized_dhcp'],
             optimized_metadata                       => $aci_opflex_hash['optimized_metadata'],
+            edgenat                                  => $edgenat,
+            edgenat_vlan_range                       => $edgenat_vlan_range,
        }
+
+       case $role {
+        /controller/: {
+          if ($enable_router_plugin == true) {
+             class {"cisco_aci::router_plugin":
+               router_ip          => $aci_opflex_hash['router_mgmt_ip'],
+               router_user        => $aci_opflex_hash['router_user'],
+               router_password    => $aci_opflex_hash['router_password'],
+               internal_intf      => $aci_opflex_hash['router_internal_interface'],
+               external_intf      => $aci_opflex_hash['router_external_interface'],
+               external_seg_blob  => $aci_opflex_hash['external_segments'],
+               gbp                => $gbp,
+             }
+          }
+        }
+       }
+
        if $role == "compute" {
            service {'neutron-opflex-agent':
               ensure => running,
