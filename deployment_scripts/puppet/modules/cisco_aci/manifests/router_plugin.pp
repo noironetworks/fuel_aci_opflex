@@ -79,7 +79,7 @@ class cisco_aci::router_plugin(
     }
 
     cisco_router_plugin {
-      "cisco_router_type:$template_id/name":     value => "ASR1kv_router";
+      "cisco_router_type:$template_id/name":     value => "ASR1k_router";
       "cisco_router_type:$template_id/description":     value => "Neutron";
       "cisco_router_type:$template_id/template_id":     value => $template_id;
       "cisco_router_type:$template_id/shared":     value => True;
