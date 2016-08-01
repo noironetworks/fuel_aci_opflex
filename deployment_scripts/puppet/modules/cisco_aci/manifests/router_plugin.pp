@@ -66,7 +66,7 @@ class cisco_aci::router_plugin(
       "cisco_hosting_device_template:$template_id/host_category":       value => "Hardware";
       "cisco_hosting_device_template:$template_id/service_types":       value => "router:FW:VPN";
       "cisco_hosting_device_template:$template_id/image":       value => "";
-      "cisco_hosting_device_template:$template_id/falvor":       value => "";
+      "cisco_hosting_device_template:$template_id/flavor":       value => "";
       "cisco_hosting_device_template:$template_id/default_credentials_id":       value => $template_id;
       "cisco_hosting_device_template:$template_id/configuration_mechanism":       value => "";
       "cisco_hosting_device_template:$template_id/protocol_port":       value => 22;
@@ -75,7 +75,7 @@ class cisco_aci::router_plugin(
       "cisco_hosting_device_template:$template_id/desired_slots_free":       value => 0;
       "cisco_hosting_device_template:$template_id/tenant_bound":       value => "";
       "cisco_hosting_device_template:$template_id/device_driver":       value => "networking_cisco.plugins.cisco.device_manager.hosting_device_drivers.noop_hd_driver.NoopHostingDeviceDriver";
-      "cisco_hosting_device_template:$template_id/plugging_driver":     value => "networking_cisco.plugins.cisco.device_manager.plugging_drivers.aci_vlan_trunking_driver.AciVLANTrunkingPlugDriver";
+      "cisco_hosting_device_template:$template_id/plugging_driver":     value => "networking_cisco.plugins.cisco.l3.schedulers.l3_router_hosting_device_scheduler.L3RouterHostingDeviceHARandomScheduler";
     }
 
     cisco_router_plugin {
