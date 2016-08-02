@@ -16,7 +16,13 @@ class cisco_aci::router_plugin(
     package {'networking-cisco':
       ensure => present,
     }
-
+  
+    service {'neutron-cisco-cfg-agent':
+       ensure => running,
+       enable => true,
+       require => Package['networking-cisco'],
+    }  
+ 
 #    if $gbp {
 #      neutron_config {
 #        "DEFAULT/service_plugins": value => "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,group_policy,neutron.services.metering.metering_plugin.MeteringPlugin";
@@ -79,6 +85,7 @@ class cisco_aci::router_plugin(
     }
 
     cisco_router_plugin {
+      "routing/default_router_type":             value => "ASR1k_router";
       "cisco_router_type:$template_id/name":     value => "ASR1k_router";
       "cisco_router_type:$template_id/description":     value => "Neutron";
       "cisco_router_type:$template_id/template_id":     value => $template_id;
