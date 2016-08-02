@@ -81,7 +81,7 @@ class cisco_aci::router_plugin(
       "cisco_hosting_device_template:$template_id/desired_slots_free":       value => 0;
       "cisco_hosting_device_template:$template_id/tenant_bound":       value => "";
       "cisco_hosting_device_template:$template_id/device_driver":       value => "networking_cisco.plugins.cisco.device_manager.hosting_device_drivers.noop_hd_driver.NoopHostingDeviceDriver";
-      "cisco_hosting_device_template:$template_id/plugging_driver":     value => "networking_cisco.plugins.cisco.l3.schedulers.l3_router_hosting_device_scheduler.L3RouterHostingDeviceHARandomScheduler";
+      "cisco_hosting_device_template:$template_id/plugging_driver":     value => "networking_cisco.plugins.cisco.device_manager.plugging_drivers.aci_vlan_trunking_driver.AciVLANTrunkingPlugDriver";
     }
 
     cisco_router_plugin {
@@ -91,7 +91,7 @@ class cisco_aci::router_plugin(
       "cisco_router_type:$template_id/template_id":     value => $template_id;
       "cisco_router_type:$template_id/shared":     value => True;
       "cisco_router_type:$template_id/slot_need":     value => 2;
-      "cisco_router_type:$template_id/scheduler":     value => "networking_cisco.plugins.cisco.device_manager.plugging_drivers.aci_vlan_trunking_driver.AciVLANTrunkingPlugDriver";
+      "cisco_router_type:$template_id/scheduler":     value => "networking_cisco.plugins.cisco.l3.schedulers.l3_router_hosting_device_scheduler.L3RouterHostingDeviceHARandomScheduler";
       "cisco_router_type:$template_id/driver":     value => "networking_cisco.plugins.cisco.l3.drivers.asr1k.aci_asr1k_routertype_driver.AciASR1kL3RouterDriver";
       "cisco_router_type:$template_id/cfg_agent_service_helper":     value => "networking_cisco.plugins.cisco.cfg_agent.service_helpers.routing_svc_helper.RoutingServiceHelper";
       "cisco_router_type:$template_id/cfg_agent_driver":     value => "networking_cisco.plugins.cisco.cfg_agent.device_drivers.asr1k.aci_asr1k_routing_driver.AciASR1kRoutingDriver";
