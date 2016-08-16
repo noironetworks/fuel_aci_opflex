@@ -16,7 +16,13 @@ class cisco_aci::router_plugin(
     package {'networking-cisco':
       ensure => present,
     }
-
+  
+    service {'neutron-cisco-cfg-agent':
+       ensure => running,
+       enable => true,
+       require => Package['networking-cisco'],
+    }  
+ 
 #    if $gbp {
 #      neutron_config {
 #        "DEFAULT/service_plugins": value => "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,group_policy,neutron.services.metering.metering_plugin.MeteringPlugin";
@@ -66,7 +72,7 @@ class cisco_aci::router_plugin(
       "cisco_hosting_device_template:$template_id/host_category":       value => "Hardware";
       "cisco_hosting_device_template:$template_id/service_types":       value => "router:FW:VPN";
       "cisco_hosting_device_template:$template_id/image":       value => "";
-      "cisco_hosting_device_template:$template_id/falvor":       value => "";
+      "cisco_hosting_device_template:$template_id/flavor":       value => "";
       "cisco_hosting_device_template:$template_id/default_credentials_id":       value => $template_id;
       "cisco_hosting_device_template:$template_id/configuration_mechanism":       value => "";
       "cisco_hosting_device_template:$template_id/protocol_port":       value => 22;
@@ -79,12 +85,13 @@ class cisco_aci::router_plugin(
     }
 
     cisco_router_plugin {
-      "cisco_router_type:$template_id/name":     value => "ASR1kv_router";
+      "routing/default_router_type":             value => "ASR1k_router";
+      "cisco_router_type:$template_id/name":     value => "ASR1k_router";
       "cisco_router_type:$template_id/description":     value => "Neutron";
       "cisco_router_type:$template_id/template_id":     value => $template_id;
       "cisco_router_type:$template_id/shared":     value => True;
       "cisco_router_type:$template_id/slot_need":     value => 2;
-      "cisco_router_type:$template_id/scheduler":     value => "networking_cisco.plugins.cisco.device_manager.plugging_drivers.aci_vlan_trunking_driver.AciVLANTrunkingPlugDriver";
+      "cisco_router_type:$template_id/scheduler":     value => "networking_cisco.plugins.cisco.l3.schedulers.l3_router_hosting_device_scheduler.L3RouterHostingDeviceHARandomScheduler";
       "cisco_router_type:$template_id/driver":     value => "networking_cisco.plugins.cisco.l3.drivers.asr1k.aci_asr1k_routertype_driver.AciASR1kL3RouterDriver";
       "cisco_router_type:$template_id/cfg_agent_service_helper":     value => "networking_cisco.plugins.cisco.cfg_agent.service_helpers.routing_svc_helper.RoutingServiceHelper";
       "cisco_router_type:$template_id/cfg_agent_driver":     value => "networking_cisco.plugins.cisco.cfg_agent.device_drivers.asr1k.aci_asr1k_routing_driver.AciASR1kRoutingDriver";
