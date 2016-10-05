@@ -96,15 +96,10 @@ case $install_type {
             opflex_remote_ip                         => $aci_opflex_hash['apic_infra_anycast_address'],
             br_to_patch                              => $br_to_patch,
             snat_gateway_mask                        => $aci_opflex_hash['snat_gateway_mask'],
-<<<<<<< HEAD
-            optimized_dhcp                           => "true",
-            optimized_metadata                       => "true",
-=======
             optimized_dhcp                           => $aci_opflex_hash['optimized_dhcp'],
             optimized_metadata                       => $aci_opflex_hash['optimized_metadata'],
             edgenat                                  => $edgenat,
             edgenat_vlan_range                       => $edgenat_vlan_range,
->>>>>>> 5be492a... router plugin support
        }
 
        case $role {
