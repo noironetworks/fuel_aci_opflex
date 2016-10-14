@@ -97,7 +97,8 @@ class cisco_aci::router_plugin(
 
     }
 
+    $y = parseyaml($external_seg_blob)
     file {'/etc/neutron/aci_asr_config.ini':
-      content => $external_seg_blob,
+      content => inline_template('<%= @y.to_json %>'),
     }
 }
