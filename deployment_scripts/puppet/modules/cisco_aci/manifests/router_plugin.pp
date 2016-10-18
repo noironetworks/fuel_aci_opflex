@@ -94,7 +94,7 @@ class cisco_aci::router_plugin(
       "cisco_hosting_device_template:$template_id1/protocol_port":     value => "22";
       "cisco_hosting_device_template:$template_id1/booting_time":     value => "360";
       "cisco_hosting_device_template:$template_id1/slot_capacity":     value => "2000";
-      "cisco_hosting_device_template:$template_id1/desired_free_slots":     value => "0";
+      "cisco_hosting_device_template:$template_id1/desired_slots_free":     value => "0";
       "cisco_hosting_device_template:$template_id1/tenant_bound":     value => "";
       "cisco_hosting_device_template:$template_id1/device_driver":     value => "networking_cisco.plugins.cisco.device_manager.hosting_device_drivers.noop_hd_driver.NoopHostingDeviceDriver";
       "cisco_hosting_device_template:$template_id1/plugging_driver":     value => "networking_cisco.plugins.cisco.device_manager.plugging_drivers.noop_plugging_driver.NoopPluggingDriver";
@@ -114,7 +114,7 @@ class cisco_aci::router_plugin(
       "cisco_router_type:$template_id/cfg_agent_driver":     value => "networking_cisco.plugins.cisco.cfg_agent.device_drivers.asr1k.aci_asr1k_routing_driver.AciASR1kRoutingDriver";
 
       "cisco_router_type:$template_id1/name":     value => "Namespace_Neutron_router";
-      "cisco_router_type:$template_id1/descriptions":     value => "\"Neutron router implemented in Linux network namespace\"";
+      "cisco_router_type:$template_id1/description":     value => "\"Neutron router implemented in Linux network namespace\"";
       "cisco_router_type:$template_id1/template_id":     value => $template_id1;
       "cisco_router_type:$template_id1/ha_enabled_by_default":     value => False;
       "cisco_router_type:$template_id1/shared":     value => True;
