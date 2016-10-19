@@ -38,20 +38,20 @@ class cisco_aci::router_plugin(
     neutron_plugin_ml2_cisco {
       "ml2_type_opflex/default_opflex_network": value => "physnet2";
       "ml2_cisco_apic/apic_vmm_type": value => "vmware";
-      #"ml2_cisco_apic/apic_domain_name": value => $domain;
+      "ml2_cisco_apic/apic_domain_name": value => $domain;
     }
 
-    $vcenter_hash = hiera('vcenter', {})
+    #$vcenter_hash = hiera('vcenter', {})
 
-    if has_key($vcenter_hash, 'computes') {
-       $co = $vcenter_hash['computes'][0]
-       if has_key($co, 'vc_cluster') {
-          $vc_cluster = $co['vc_cluster']
-          neutron_plugin_ml2_cisco {
-             'ml2_cisco_apic/apic_domain_name':   value => $vc_cluster;
-          }
-       }
-    }
+    #if has_key($vcenter_hash, 'computes') {
+    #   $co = $vcenter_hash['computes'][0]
+    #   if has_key($co, 'vc_cluster') {
+    #      $vc_cluster = $co['vc_cluster']
+    #      neutron_plugin_ml2_cisco {
+    #         'ml2_cisco_apic/apic_domain_name':   value => $vc_cluster;
+    #      }
+    #   }
+    #}
 
     cisco_cfg_agent {
       "cfg_agent/routing_svc_helper_class":        value => "networking_cisco.plugins.cisco.cfg_agent.service_helpers.routing_svc_helper_aci.RoutingServiceHelperAci";
