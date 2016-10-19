@@ -80,10 +80,6 @@ class cisco_aci::opflex_ml2 (
     Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-server' |>
     Neutron_dhcp_agent_config <| |> ~> Service <| title == 'neutron-dhcp-agent' |>
 
-    #KVR: comment out next 3 lines, dont need neutron-ovs-agent
-    #Neutron_config <| |> ~> Service <| title == 'neutron-ovs-agent' |>
-    #Neutron_plugin_ml2 <| |> ~> Service <| title == 'neutron-ovs-agent' |>
-    #Neutron_plugin_ml2_cisco <| |> ~> Service <| title == 'neutron-ovs-agent' |>
     File <| title == 'neutron_initd' |> ~> Service <| title == 'neutron-server' |>
 
     if $use_lldp {

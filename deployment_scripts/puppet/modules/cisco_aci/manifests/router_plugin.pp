@@ -23,15 +23,14 @@ class cisco_aci::router_plugin(
        require => Package['networking-cisco'],
     }  
  
-#    if $gbp {
-#      neutron_config {
-#        "DEFAULT/service_plugins": value => "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,group_policy,neutron.services.metering.metering_plugin.MeteringPlugin";
-#      }
-#    } else {
-#      neutron_config {
-#        "DEFAULT/service_plugins": value => "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,neutron.services.metering.metering_plugin.MeteringPlugin";
-#      }
-#    }
+    if $gbp {
+       $splugin = "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,group_policy,neutron.services.metering.metering_plugin.MeteringPlugin"
+    } else {
+       $splugin = "networking_cisco.plugins.cisco.service_plugins.cisco_device_manager_plugin.CiscoDeviceManagerPlugin,networking_cisco.plugins.cisco.service_plugins.cisco_router_plugin.CiscoRouterPlugin,neutron.services.metering.metering_plugin.MeteringPlugin"
+    }
+    neutron_config {
+      "DEFAULT/service_plugins": value => $splugin;
+    }
 
     $dvs_hash = hiera('fuel-plugin-vmware-dvs', {})
     $domain = $dvs_hash['vmware_dvs_net_maps']

@@ -18,7 +18,7 @@ class neutron::params {
         }
 
         'Debian': {
-            $service_ovs_agent      = 'neutron-plugin-openvswitch-agent'
+            $service_ovs_agent      = 'neutron-openvswitch-agent'
             $ha_ovs_agent           = 'p_neutron-plugin-openvswitch-agent'
             $initd_file_path        = '/etc/init/neutron-server.conf'
             $initd_file_template    = 'puppet:///modules/neutron/neutron-server.conf'
