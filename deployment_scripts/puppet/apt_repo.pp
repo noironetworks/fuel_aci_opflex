@@ -4,5 +4,6 @@ apt::pin { 'aci_opflex':
 }
 apt::conf {'unauth':
   priority => 99,
-  content => 'APT::Get::AllowUnauthenticated 1;'
+  content => 'APT::Get::AllowUnauthenticated 1;',
+  notify_update => false
 }
