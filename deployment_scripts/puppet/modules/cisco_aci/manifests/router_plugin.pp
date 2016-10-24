@@ -64,7 +64,7 @@ class cisco_aci::router_plugin(
       "HwVLANTrunkingPlugDriver:$template_id/internal_net_interface_1":  value => "*:$internal_intf";
       "HwVLANTrunkingPlugDriver:$template_id/external_net_interface_1":  value => "*:$external_intf";
      
-      "general/l3_admin_tenant":                value => "admin";
+      "general/l3_admin_tenant":                value => "services";
       "general/aci_transit_nets_config_file":   value => "/etc/neutron/aci_asr_config.ini";
 
       "cisco_hosting_device_template:$template_id/name":          value => "ASR1k";
