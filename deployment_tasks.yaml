@@ -2,15 +2,6 @@
   type: skipped
 - id: openstack-network-agents-l3
   type: skipped
-- id: fix-repo-priority
-  type: puppet
-  role: ['primary-controller','controller','compute']
-  requires: [plugins_setup_repositories]
-  required_for: [pre_deployment_start]
-  parameters:
-    puppet_manifest: puppet/apt_repo.pp
-    puppet_modules: /etc/puppet/modules/
-    timeout: 3600
 - id: opflex-config
   type: puppet
   role: ['primary-controller','controller','compute']

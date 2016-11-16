@@ -5,7 +5,7 @@ $access_hash        = hiera('access',{})
 $management_vip     = hiera('management_vip')
 $neutron_settings   = hiera('quantum_settings',{})
 $db_connection      = "mysql://neutron:${neutron_settings['database']['passwd']}@${management_vip}/neutron?&read_timeout=60"
-$network_scheme     = hiera('network_scheme', {})
+$network_scheme     = hiera_hash('network_scheme', {})
 
 $debug                         = hiera('debug', true)
 $auth_region                   = 'RegionOne'
@@ -73,6 +73,8 @@ case $install_type {
           }
        }
 
+       class {"cisco_aci::apt_fix": }
+
        class {"cisco_aci::${class_name}":
             ha_prefix                                => $ha_prefix,
             role                                     => $role,
@@ -100,6 +102,7 @@ case $install_type {
             optimized_metadata                       => "true",
             edgenat                                  => $edgenat,
             edgenat_vlan_range                       => $edgenat_vlan_range,
+            require                                  => Class['cisco_aci::apt_fix'],
        }
 
        case $role {
