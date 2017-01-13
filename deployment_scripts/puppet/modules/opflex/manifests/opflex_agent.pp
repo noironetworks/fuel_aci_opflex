@@ -101,6 +101,7 @@ class opflex::opflex_agent (
            mode => '0644',
            content => template('opflex/opflex-agent-ovs.conf.erb'),
            require => Package['agent-ovs'],
+           notify  => Service['agent-ovs'],
         }
     }else {
         $opflex_encap_iface = "p_opflex"
@@ -109,6 +110,7 @@ class opflex::opflex_agent (
            mode => '0644',
            content => template('opflex/opflex-agent-ovs-vlan.conf.erb'),
            require => Package['agent-ovs'],
+           notify  => Service['agent-ovs'],
         }
     }
 
